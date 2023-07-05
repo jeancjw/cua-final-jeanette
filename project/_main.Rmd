@@ -1,0 +1,51 @@
+--- 
+title: "Exploring the Airbnb Market in Singapore"
+author: "Jeanette Choong"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+---
+
+# Project Summary
+
+This is where you write the index of your project. Think of it as the first page people will see when they navigate to your project. If you give this link to employers who want to see your work samples, they will land here first. Amaze them with a nice big visualisation, a short executive summary, whatever you want to show to put your best foot forward.
+
+
+<!--chapter:end:index.Rmd-->
+
+
+
+## Preliminaries 
+## 1. Clean Data
+## 2. Number of listings over time
+## 3. Exploratory Analysis of variables
+### 3.1 ```price```
+### 3.2 ```host_listings_count```
+### 3.3 ```property_type```
+
+<!--chapter:end:project.Rmd-->
+
+
+
+## 1. Introduction
+## 2. Literature Review
+### 2.1 Positive effects of Airbnbs for travellers
+### 2.2 Negative effects on neighbourhoods and society
+### 2.3 Negative effects on traditional tourist lodging
+### 2.4 Singapore's Laws on Short-term Rentals
+## 3. Research Question(s) & Hypotheses
+## 4. Data Sources 
+## 5. Research Approach
+## 6. Preliminary Data Analyses & Visualisation
+### 6.1 No. of listings in the past year
+### 6.2 Reviews over time
+### 6.3 Listings by region
+### 6.4 Prices in Central Region
+### 6.5 Minimum number of nights
+### 6.6 Top host
+## 7. References
+
+<!--chapter:end:proposal.Rmd-->
+

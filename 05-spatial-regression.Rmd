@@ -1,0 +1,149 @@
+# Spatial Autocorrelation
+
+```{r}
+library(tidyverse)
+library(dplyr)
+library(here)
+library(sf)
+library(tmap)
+library(spdep)
+```
+
+
+```{r}
+price <- readRDS(here::here("projdata/price.rds"))
+```
+
+
+
+```{r}
+hex_sp <- as(price, "Spatial")
+hex_neighbours <- poly2nb(hex_sp)
+
+# visually inspect neighbours
+plot(hex_neighbours, coordinates(hex_sp))
+```
+
+
+```{r}
+hex_weights <- nb2listw(hex_neighbours, style = "W", zero.policy = TRUE)
+```
+
+
+```{r}
+price_lag <- lag.listw(hex_weights, hex_sp$price)
+```
+
+```{r}
+price_lag_df <- price %>%
+  add_column(price_lag = price_lag)
+
+current.mode <- tmap_mode("plot")
+tm_shape(price_lag_df) +
+  tm_fill(breaks=c(0,50,100,200,300,400,500,600), col = "price_lag", palette="YlGnBu") + tm_borders()
+```
+
+
+## Moran's I
+
+```{r}
+ggplot(price_lag_df, aes(x=price, y =price_lag))+
+  geom_point() + 
+  geom_smooth(method=lm)
+```
+
+```{r}
+lm(price_lag ~ price, data=price_lag_df)
+```
+
+Generally, there is a positive correlation between the ```price_lag``` and ```price``` variable, but the error increases as we go along due to the huge variation in prices of listings.
+
+```{r}
+moran.test(price_lag_df$price, hex_weights)
+```
+
+Under the Moran I test, we can confirm that there is a significant positive autocorrelation between the residuals. 
+
+## Local value of autocorrelation
+
+```{r}
+moran_local <- localmoran(price_lag_df$price, hex_weights)
+price_lag_df$moran <- moran_local[,1]
+
+tm_shape(price_lag_df) + 
+  tm_polygons(col = "moran", palette = "-RdBu")
+
+```
+
+From here, we can see a hot spot where prices are extremely high in the southern islands. 
+
+# Spatial Regression
+
+## Setting up the regression
+
+
+```{r}
+planning_areas_sf <- planning_areas
+```
+
+
+```{r}
+planning_areas <- read_csv(here::here("data/planning_areas.csv")) %>% 
+  left_join(planning_areas_sf, ., by = c("PLN_AREA_N" = "planning_area")) %>% 
+  filter(area_hdb > 0) %>% # keep the areas where there are HDB
+  st_buffer(0) # we use this to correct shapefile issues
+```
+
+```{r}
+tm_shape(planning_areas) + tm_polygons(col = 'area_hdb')
+```
+
+```{r}
+hex_grid <- planning_areas %>%
+  st_make_grid(st_bbox(.), square = FALSE, cellsize = 1500) %>% 
+  st_sf() %>% 
+  mutate(hex_id = row_number())
+
+tm_shape(hex_grid) + tm_polygons()
+```
+
+```{r}
+hex_grid <- st_join(hex_grid, planning_areas, largest = T)
+```
+
+```{r}
+tm_shape(hex_grid) + tm_polygons(col = 'area_hdb')
+```
+
+
+
+
+```{r}
+listings_sf <- readRDS(here::here("projdata/listings_sf.rds"))
+listings_sf_hex <- st_join(listings_sf, hex_grid) %>%
+  st_set_geometry(NULL)
+```
+
+Joining to sociodemographic data to find out if areas with HDB flats have listings that are more expensive. 
+
+```{r}
+hex_grid <- listings_sf_hex  %>%
+  group_by(hex_id) %>%
+  summarise(mean_price = mean(price),
+            mean_nights = mean(minimum_nights),
+            mean_reviews_mth = mean(reviews_per_month)) %>%
+  left_join(hex_grid, .) %>%
+  select(-starts_with("hh"), -starts_with("age"), -starts_with("edu"), -starts_with("eth"), -starts_with("status"),  -starts_with("occupation"), -starts_with("dwelling")) %>% 
+  filter(mean_price < 600) 
+
+tm_shape(hex_grid) +  tm_fill(breaks=c(0,50,100,150,200,250,300,350, 400, 450, 500, 550, 600), col = "mean_price", palette="YlGnBu") + tm_borders()
+```
+
+## Reflection on Spatial Autocorrelation/Regression Method
+
+Initially, my intention of using the spatial autocorrelation method is to find out if the different variables had an effect on Airbnb prices. However, I later realised that there was no significant pattern. 
+
+I then tried to aggregate data from our lab practice which shows the percentage of HDBs in each planning area, with the intention of finding out if areas with higher HDB percentage have lower number of reviews (used as proxy for listings). Secondly, I wanted to find out if areas with more HDBs have listings that are less expensive, as that may indicate that the listings are HDBs.
+
+However, it was difficult to make conclusions from the data, and my guess is that the reasons are similar to that of the spatial clustering method. In addition, it could also mean that the variables are not really influencing prices. 
+

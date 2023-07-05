@@ -1,0 +1,32 @@
+# Introduction
+
+Airbnb has become an increasingly popular platform for travellers to seek short-term accommodation options when they are overseas. However, the home-sharing platform's rapid growth since its inception in 2008 has also put a spotlight on its negative effects, such as causing disruptions to neighbourhoods and threatening the hotel industry (Gerdeman, 2018; Nieuwland and van Melik, 2020). In Singapore, short-term accommodation laws under the 2017 Planning Act and Housing and Development Act impose stringent legal restrictions that make it almost impossible for travellers to seek accommodation from the Airbnb platform without flouting the laws. Despite these laws, there still exists 7713 Airbnb listings in Singapore as of March 2020 (Inside Airbnb, 2020), suggesting the possibility that several hosts are renting out their listings illegally. 
+  
+## Research Questions & Hypotheses
+
+Therefore, the main research question for this study is: Why is Singapore still seeing a significant number of Airbnb listings despite the laws on short-term accommodations?
+
+Under this question, the study hypothesises that many home owners may be flouting the rules.
+
+Some guiding questions for this study include:
+
+1. How have the number of listings changed over the years?
+
+2. What types of property listings exist in the Airbnb market, and how are they distributed spatially? 
+
+3. Which planning areas see more listings that potentially violate the laws on short-term accommodation?
+
+4. How much does it cost to rent an Airbnb in Singapore and what may be influencing these prices?
+
+
+## Research Approach
+
+First, I will obtain an overview of the Airbnb market by looking at the number of listings and reviews over the years. This will provide insight into the popularity of Airbnbs in Singapore. I will then perform an exploratory data analysis on selected variables such as price, property and room types, reviews per month, minimum length of stay and so on, to get a sense of which listings/hosts/property types may be violating the law. 
+
+Next, I will use the ```tmap``` library to visualise the spatial distribution of listings across Singapore's planning regions. I will also visualise the listings by minimum length of stay (```minimum_nights```) to get a sense of where the potentially errant listings are. I will also visualise the listings that are in close proximity to the MRT stations and this may have implications for prices. 
+
+I also plan to use PCA to understand how the different variables may be correlated. This may provide some insight into the pricing and spatial distribution of the Airbnb listings, which may be difficult to visualise purely from plotting the distribution of listings. 
+
+## Other methods
+
+I also attempted spatial clustering and regression, which were not very successful and helpful in answering my research questions. For these methods,I have included a short reflection on why I thought they may not be appropriate for this study.

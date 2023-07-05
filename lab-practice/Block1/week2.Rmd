@@ -1,0 +1,82 @@
+---
+title: "Week 2"
+author: "Jeanette Choong"
+date: "2/6/2020"
+output: github_document
+---
+
+```{r message=FALSE}
+library(tidyverse)
+library(here)
+```
+
+
+```{r message=FALSE}
+sales <- read_csv(here::here("data/hdb_resale_2015_onwards.csv"))
+```
+
+```{r}
+sales %>%  glimpse()
+```
+```{r}
+library(lubridate)
+library(forcats)
+
+sales %>% 
+  mutate(month = ymd(month, truncated = 1), 
+         flat_type = as_factor(flat_type), 
+         storey_range = as_factor(storey_range),
+         flat_model = as_factor(flat_model))
+```
+
+# What is the earlier lease commencement date and where are these flats located?
+
+1966, Jurong East
+```{r}
+sales %>% 
+  arrange(lease_commence_date) %>% 
+  select(town, lease_commence_date)
+```
+
+# What are the largest HDB flats in Singapore? How much did they sell for?
+
+3 room terrace flats in Kallang/Whampoa, sold for between S$830,000 - S$1,185,000.
+```{r}
+sales %>% 
+  arrange(-floor_area_sqm) %>% 
+    select(town,floor_area_sqm, flat_model, resale_price)
+```
+
+# What is the most expensive flat in Punggol?
+
+5-room Premium Apartment Loft at Blk 305B Punggol Rd, between 16-18 storey.
+```{r}
+sales %>% 
+  filter(town == "PUNGGOL") %>% 
+  arrange(-resale_price) %>% 
+      select(town, floor_area_sqm, flat_model, resale_price)
+```
+
+# Which town has, on average, the largest flats (by floor area)?
+
+Pasir Ris
+
+```{r}
+sales %>% 
+  arrange(-floor_area_sqm) %>% 
+  group_by(town) %>% 
+  summarise(average_size = mean(floor_area_sqm)) %>% 
+arrange(-average_size)
+```
+
+# Which town has, on average, the cheapest flats per square meter?
+
+Choa Chu Kang
+```{r}
+sales %>% 
+mutate(cost_sqm = (resale_price/floor_area_sqm)) %>% 
+  group_by(town) %>% 
+  summarise(cost_sqm_town = mean(cost_sqm)) %>% 
+  arrange(cost_sqm_town)
+```
+

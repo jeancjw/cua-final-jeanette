@@ -1,0 +1,397 @@
+---
+title: "Week 8 - PCA"
+author: "Jeanette Choong"
+date: "3/19/2020"
+output: github_document
+---
+
+## 7.1 Introduction
+In the previous section, we used Multi-Dimensional Scaling (MDS) as a dimension reduction technique. Although MDS can be quite effective in its own right, the interpretation of the resulting plots can sometimes be difficult - especially because the axes lose their explicit meaning. There are other dimension reduction strategies available that might help in this regard. One of these strategies is called factor analysis: the analysis of underlying or latent ‘factors’ present in larger set of variables or dimensions (e.g. income and education could both be dimensions of an underlying factor ‘class’). A special case of factor analysis is called Principal Component Analysis (PCA). PCA allows us to show which variables/dimensions in a dataset are correlated, potentially allowing them to be expressed in fewer dimensions or ‘components’. It also has another useful feature for subsequent analytical procedures: the components derived from PCA are, by definition, uncorrelated which is often a requirement for (for example) regression analyses. For a longer discussion and a worked example of PCA, see Boehmke’s US crime rates notebook or Wyly’s background paper and play with the interactive example made by Victor Powell and Lewis Lehe.
+
+## 7.2 PCA with two variables
+Conducting PCA in R is relatively straightforward. It has a built-in function for PCA (prcomp) but we will also use the broom, ggfortify and psych packages to help make our analysis a bit easier.
+
+We first give some of the intuition behind PCA by restricting our analysis to two variables only. Our goal will be to describe our observations as succinctly as possible, while providing the maximum amount of information. If our data had no variation and all neighbourhoods had the same two values for hh_income_gt_17500 and area_res, we wouldn’t need to summarise it more than knowing the two values. But the data varies, as evidenced by the following plot:
+
+```{r}
+library(tidyverse)
+library(here)
+library(readr)
+```
+
+```{r}
+planning_areas <- read_csv(here::here("data/planning_areas.csv"))
+
+planning_areas %>% 
+  select(planning_area, area_res, hh_income_gt_17500) %>% 
+  ggplot() +
+  geom_point(aes(x=area_res, y = hh_income_gt_17500))
+```
+```area_res``` varies between 0 and 0.15, while ```hh_income_gt_17500``` varies between a little below 0.1 and a little over 0.5. PCA attempts to explain this variation by capturing as much of it as possible. This is done by extracting components (sometimes called factors, although factor analysis is related but different from PCA), with the first component extracted to explain as much variation as possible. Let’s see what this means on our example.
+
+### 7.2.1 Scaling
+
+First we scale our data as we have done in MDS, this time using the ```scale``` function. Scaling a variable subtracts the mean of that variable from all observations, then divides all observations by the standard deviation of the variable. IN other words, you can check that the following two expressions give you the same result.
+
+```{r}
+library(scales)
+
+scale(planning_areas$area_res) [1:6] #shows first 6 obs only
+```
+
+```{r}
+planning_areas %>% 
+  select(area_res) %>% 
+  mutate(area_res_scaled = (area_res - mean(area_res))/sd(area_res)) %>% 
+  head()
+```
+
+Let's decompose what is happening when we apply ```scale```. 
+1. First, we look at the distribution of ```area_res```.
+
+```{r}
+planning_areas %>% 
+  ggplot() + 
+  geom_histogram(aes(x=area_res), bins = 30)
+```
+
+2. Second, we subtract the mean of ```area_res``` from all the observations to obtain a shifted ``area_res```. 
+Note that this does not change the shape of the distribution (up to some artefacts from the binning), but shifted it to the left. The distribution is now centred at zero: the mean of our shifted ```area_res``` is 0.
+
+```{r}
+planning_areas %>% 
+  ggplot() + 
+  geom_histogram(aes(x = area_res - mean(area_res)), bins = 30)
+```
+
+3. Finally we divide by the sd to scale the shifted ```area_res```. Again, the shape does not change but you can observe that the variable takes values over a larger interval.
+
+```{r}
+planning_areas %>%
+  ggplot() +
+  geom_histogram(aes(x = (area_res - mean(area_res)) / sd(area_res)), bins = 30)
+```
+
+The idea is to apply the same procedure to all our variables. You can see the result below on some of the variables. We combine a few commands below:
+
+- To scale our variables, we cast them into a matrix and apply the ```scale``` function.
+- We cast the matrix back to a tibble with ```as_tibble()```
+- We add back the planning area names with bind_cols.
+
+```{r}
+library(patchwork)
+
+#Choose some variables from our dataset
+scale_example_data <- planning_areas %>% 
+  select(
+    planning_area, starts_with("area"), 
+    starts_with("age")
+  )
+
+# cast data set to long format
+long_data <- scale_example_data %>% 
+  pivot_longer(-planning_area)
+
+# Scale dataset and cast it to long format
+
+long_data_scaled <- scale(
+  scale_example_data %>% 
+    select(-planning_area) %>% 
+    as.matrix()
+) %>% 
+  as_tibble() %>% 
+  bind_cols(scale_example_data %>% 
+              select(planning_area)) %>%  #add area names back
+  pivot_longer(-planning_area)
+
+# Compare plots
+
+long_data %>% 
+  ggplot() + 
+  geom_histogram(aes(x = value)) + facet_wrap(vars(name))| long_data_scaled %>% 
+  ggplot() + 
+  geom_histogram(aes(x=value)) + facet_wrap(vars(name))
+```
+
+Let's scale our two variables area_res and hh_income_gt_17500 and plot them on a scatterplot
+```{r}
+planning_areas_scale <- scale(
+  planning_areas %>% 
+    select(hh_income_gt_17500, area_res) %>% 
+    as.matrix()
+) %>% 
+  as_tibble() %>% 
+  bind_cols(planning_areas %>%  select(planning_area))
+
+planning_areas_scale %>% 
+  ggplot() + 
+  geom_text(aes(x = area_res, y = hh_income_gt_17500, label = planning_area))
+```
+Note that scaling does not change the relative positions of the planning areas in the hh_income_gt_17500 / area_res scatterplot, only their coordinates. Now let’s extract our first component.
+
+
+### 7.2.2 First component extraction
+
+```{r}
+library(broom)
+
+# `prcomp` extracts principal components for us
+pc <- planning_areas_scale %>% 
+  column_to_rownames(var = "planning_area") %>% 
+  select(area_res, hh_income_gt_17500) %>% 
+  prcomp(.)
+tidy(pc, "pcs") %>% # summary information on the components
+  filter(PC == 1) # only look at the first component
+```
+
+The percent variable refers to the amount of total variance explained by the first component. 88% is a high number! Now let’s see if we can glean more information about this component.
+
+```{r}
+factors <- tidy(pc, "variables") %>% 
+  spread(key = "PC", value = "value") %>% 
+  select(column, "1")
+
+factors
+```
+
+The two numbers in the “1” column above give us the “direction” of the first component. We can plot these directions in a directions plot.
+
+```{r}
+tidy(pc, "variables") %>% 
+  filter(PC ==1) %>% 
+  ggplot(aes(x=column, y = value)) + 
+  geom_hline(yintercept = 0) + 
+  geom_col() + 
+  ylim(-1,1) + 
+  coord_flip() + 
+  facet_grid(~PC)
+```
+We can also plot the component’s direction in our initial scatterplot. Since we scaled our variables, the component is an arrow (“vector”) originating from the center of the plot.
+
+### 7.2.3 Second component extraction
+
+Before going further, let’s extract another component. Note that there is an order to the operations: the first component explains the most variation possible (in this case 88%). Then the second component explains the most variation possible among the variation remaining (12% remain).
+
+```{r}
+tidy(pc, "pcs") %>% 
+  filter(PC == 2) #getting the second component
+```
+Here we see cumulative is = 1, means we have explained all the variation.
+
+We can also ge tthe directions plot for the two components
+
+```{r}
+tidy(pc, "variables") %>% 
+  ggplot(aes(x=column, y = value)) + 
+  geom_hline(yintercept = 0)+
+  geom_col()+
+  ylim(-1,1)+
+  coord_flip()+
+  facet_grid(~PC)
+```
+The second component we extract explains 12% of the total variation, and so explains all the variation left! Let’s see why this is not surprising by plotting the second component.
+
+
+The second component points to a different direction. While the first represented the positive relationship between hh_income_gt_17500 and area_res, the second says “this is not a perfect relationship, there is still a bit of variation left on either side of the line”. In particular, now that we have two arrows, we could write any planning area in our dataset as a mixture of the first and the second arrow, since they define a coordinate system. This is done with the following chunk.
+
+```{r}
+tidy(pc) %>%  
+  spread(key = "PC", value ="value") %>% 
+  rename(component1 = "1", component2 = "2") # position of each point on the pcs
+```
+Let’s look at Bukit Timah and understand what these numbers mean. The coefficient of component 1 for Bukit Timah is -3.74, while the coefficient of component 2 is 0.79. This means that we can understand Bukit Timah as “a lot of negative component 1, and some amount of component 2”. We can plot all these coefficients in a scatterplot, called a loadings plot.
+
+
+```{r}
+tidy(pc) %>% 
+  spread(key = "PC", value = "value") %>% 
+  rename(component1 = "1", component2 = "2") %>% 
+  ggplot() + 
+  geom_text(aes(x=component1, y =component2, label = row))
+```
+In the plot above, we express each planning area in terms of component 1 and component 2, instead of in terms of hh_income_gt_17500 and area_res. Why is that useful? Because each component captures some aspect of the relationship between hh_income_gt_17500 and area_res, the first one capturing their positive relationship, and the second one correcting for the additional variance that the first could not explain. We can plot the loadings of each variable onto the loading plot, represented by arrows.
+
+```{r}
+# Loadings plot
+library(ggfortify)
+autoplot(pc, label = TRUE, x = 1, y = 2, loadings = T, loadings.label = T)
+```
+
+Now the plots start to make sense. Points moving towards the direction of the hh_income_gt_17500 are those for which this variable has a high value, and the same conclusion holds for area_res. The resulting plot however is not much more informative than the one we started with: it is simply rotated and has two extra red arrows. This is something we already observed with MDS. Starting with a 2D dataset and reducing it to a 2D dataset moves things around, giving perhaps a bit more clarity but not much more interpretation. So let’s look at PCA applied on more variables of our dataset to see where the method shines.
+
+## 7.3 PCA with several variables
+
+The strength of PCA really comes out once our dataset has more than two variables. Let's analyse all of the age, occupation, area, dwelling and household variables we have available in our dataset. 
+
+```{r}
+pc <- planning_areas %>% 
+  column_to_rownames(var= "planning_area") %>% 
+  select(starts_with("age"),
+         starts_with("area"),
+         starts_with("occupation"),
+         starts_with("dwelling"), 
+         starts_with("hh")) %>% 
+  prcomp(., center = T, scale.=T) # instead of scaling our data first, we can let prcomp do it for us
+```
+
+When we inspect the results of our PCA, you notice that you get as many components back as there were variables in your dataset(14). PCA will always give you back an equal number of components compared to your input variables.
+
+Together, all of these components explain 100% of the variance in your data. But, and this is where things get useful, the first few components explain much more variance! In our case the first three components explain 87% of all variance. 
+
+```{r}
+tidy(pc, "pcs") #summary info on the 14 components that have been extracted
+```
+Std dev & percent keeps decreasing, which explains that each component tries to explain the remaining variance. Cumulative tells us how much of the variance has been explained up to that component. The more we extract components, the more quickly we reach 1. Here, 90% of our variance is alr captured by our first four components so we can just keep the first 4. 
+
+
+### 7.3.1 Deciding how many components to keep
+
+How many components should we keep? There are different ways to decide which components to cut off. 
+
+The first method looks for the elbox in the so-called scree plot, which is just a line plot of the explained variance of each component. Where would you place the cut-off here?
+
+```{r}
+tidy(pc, "pcs") %>% 
+  ggplot(aes(x=PC, y = percent)) + 
+  geom_line() + 
+  geom_text(aes(x=PC, y=percent, label=PC), nudge_y=0.03)
+```
+
+The second method picks component until some threshold of explained variance is reached (usually 90%). ```tidy(pc, "pcs)``` above returned the cumulative variance explained. We can use it to plot the cumulative scree plot and place our cut-off.
+
+```{r}
+tidy(pc, "pcs") %>% 
+  ggplot(aes(x=PC, y = cumulative)) + 
+  geom_hline(yintercept = 0.9, color = "orange") +
+  geom_line()+
+  geom_text(aes(x=PC, y=cumulative, label=PC), nudge_y=0.03)
+```
+
+### 7.3.2 Directions plot
+
+First, we can look at the directions plot, to ask how variable tend to vary with each other.
+
+```{r}
+tidy(pc, "variables") %>% 
+  filter(PC < 5) %>%  #only show first 4 components
+  ggplot(aes(x=column, y =value)) + 
+  geom_hline(yintercept = 0) + 
+  geom_col(aes(fill=(value>=0)), 
+           show.legend = FALSE)+
+  coord_flip() +
+  facet_grid(~PC)
+```
+
+Looking at the first component here, it seems to say that for a high value of ```occupation_senior_managers_professional```, we expect a low value of ```occupation_cleaners_labourers_plan```, a low value of ```hh_income_lt_2000```, and a high value of ```hh_income_gt_17500``` etc.
+
+
+Observations of the first component have a high value of those with positive coefficient (green/blue), then in the opposite direction you have the rest. This is the biggest contrast in your dataset. First thing to look at is the sign of your coefficient - positive or negative?
+
+Then when you look at the second component, it says that there are also people who have big families in HDB who don't have super low or high income. 
+
+
+Another interpretation: 
+Looking at the bottom three variables on age, we can see that they are ordered similarly with the first and second components. However, the first factor has a positive loading for ```area_res``` while the second factor has a positive loading for ```area_hdb```. 
+
+The first fact seems to say "when we are in a younger neighbourhood, we expect more senior managers". The second factor comes in to give more clarity to this assessment: "This is not true if the neighbourhood has more HDB!" We will also see a variation on PCA that makes such statements even clearer in the next Section. 
+
+### 7.3.3 Loadings plot
+
+We can plot the results of our analysis for the first few components by hand with ```ggplot``` as we did above, but we can also do this more easily with the ```autoplot``` function provided by the ```ggfortify``` package. 
+
+```{r fig.width=10, fig.height=8}
+autoplot(pc, label=TRUE) #first two components by default
+```
+
+```{r fig.width=10, fig.height=8}
+autoplot(pc, label=TRUE, x=3, y=4) #PC3 and PC4
+```
+
+These plots look quite interesting and you might already be able to infer some patterns. Is there a more principled way to get at that meaning? 
+We can do this by looking a the loadings of each variable on the component. Loadings are nothing more than a fancy tern for the correlation between the original variable and the factor. We can do this in table-form:
+
+```{r}
+tidy(pc, "variables") %>% 
+  spread(key="PC", value="value")
+```
+
+Admittedly this is not very readable. When trying to understand the 'meaning' of each component, it sometimes makes sense to look at both the loadings and observations in PCA 'space' at the same time. We can do so with autoplot.
+
+```{r fig.width=9, fig.height=8}
+autoplot(pc, label=TRUE, x=1, y=2, loadings = T, loadings.label=T)
+```
+
+That's a lot of arrows! Yet, this could drive our analysis to understand why Marine Parade is different from Queenstown for example. It seems for instance that area_res is quite higher in Marine Parade, while ```area_other``` dominates Quenstown. We start to see groups appear and the variables that drive the differences between these groups.
+
+
+#### 7.3.3.1 Exercise
+
+Obtain the loadings plot for components 3 & 4. Does this add to your analysis?
+
+```{r fig.width=9, fig.height=8}
+autoplot(pc, label=TRUE, x=3, y=4, loadings = T, loadings.label=T)
+```
+Marine Parade and Queenstown now appear in the same group??
+
+## 7.4 Extensions to PCA
+
+Finally if our concern is purely with interpretability and finding 'latent' factors, we can also relax some of the restriction that PCA brings with it. If you remember, in PCA the first component always explains as much of the variation in our dataset as possible. But this isn't a hard requirement and we can obtain our components/factors based on other rules as well. One such rule could be that we can to maximise the loadings/correlation of individual variables on a single component. If only a sinlge or small set of variables would load on a factor(and they wouldn't load on the other components), this would really help our interpretation. To do this, we can use the principal function from the ```psych``` package.
+
+```{r}
+library(psych)
+```
+
+```{r}
+fa <- planning_areas %>% 
+  column_to_rownames(var="planning_area") %>% 
+  select(starts_with("age"),
+         starts_with("occupation"),
+         starts_with("area"),
+         starts_with("dwelling"),
+         starts_with("hh")) %>% 
+  principal(nfactors=4, rotate="varimax")
+
+fa
+```
+
+The object returned by ```principal``` has a slighty different structure than that from ```prcomp```. By looking at the summary, you will see that the proportion of the variance explained by each component is slightly different than in the previous PCA> This is to be expected, but luckily we see that our 4 factors still explain 92% of the variance in our dataset. Let's look at the resulting directions plot. 
+
+```{r}
+fa[['loadings']] %>% 
+  unclass() %>% 
+  as_tibble(rownames="planning_area") %>%  # convert loadings to tibble for easy plotting
+  gather(key="component", value="value", -planning_area) %>% 
+  ggplot(aes(x=planning_area, y =value)) + 
+  geom_hline(yintercept = 0) +
+  geom_col(aes(fill=(value>=0)), 
+           show.legend = FALSE)+
+  ylim(-1,1)+
+  coord_flip()+
+  facet_grid(~component) | autoplot(pc, label=TRUE, x=3, y=4, loadings = F, loadings.label=F)
+```
+Doesn't capture as much variance but loads variables that are more important. Therefore more are closer to 0 or 1. When you want to do prediction, the previous one is more useful. varimax is more useful for exploratory data analysis. Varimax is easier to interpret. 
+
+
+### 7.4.1 Exercise
+
+Compare with the same plot based on PCA - which one do you find easier to interpret? What do you takeaway from this plot?
+
+
+Finally we can also make a plot of the planning areas for the first four factors
+
+```{r}
+fa[['scores']] %>% 
+  unclass() %>% 
+  as_tibble(rownames="planning_area") %>% 
+  ggplot(aes(x=RC1, y=RC2))+
+  geom_text(aes(label=planning_area))
+```
+
+```{r}
+fa[['scores']] %>% 
+  unclass() %>% 
+  as_tibble(rownames="planning_area") %>% 
+  ggplot(aes(x=RC3, y=RC4))+
+  geom_text(aes(label=planning_area))
+```
+

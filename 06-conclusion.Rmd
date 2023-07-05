@@ -1,0 +1,18 @@
+# Concluding thoughts
+
+To summarise, it is clear than despite the strict laws, the Airbnb platform has still gained popularity over the years. This was seen in the Section 3.2, where the number of reviews over time was used as a proxy to find out if the number of listings had increased over the years, as data for the listings was limited. 
+
+If rules are so strict, why then are we seeing so many Airbnb listings in Singapore? 
+
+The first observation is that some of these listings are boutique hotels. At the start of this study, the research was crafted with the assumption that all the listings belong to home owners, and this might have affected the the initial analyses pertaining to the minimum length of stay. Given more time to analyse the data, I would probably remove listings that belong to hotels in order to get a better sense of the actual ground situation regarding home owners. Having said that, the presence of hotel listings also suggests that the Airbnb platform may not necessarily be a threat to hotels, but can also provide them - especially newer boutique hotels - with more visibility amongst potential guests.
+
+The second observation is that most property listings are located in the Central region. The central region also has more variety of property and room types, which we saw in Section 3.3.7. Hotels, however, were only found within the Central region. 
+
+Thirdly, based on the minimum length of stay, there are no specific planning regions or neighbourhoods that see clusters of Airbnb listings that are potentially flouting the rules. In fact, most areas tend to have a large proportion of potential rule breakers as compared to compliant listings. 
+
+Lastly, my initial hypothesis was that the location of Airbnbs will significantly affect its price. While this is true for a select few listings, we can see in the comparison between listings near the MRT and away from the MRT stations, that the price difference is marginal. 
+
+
+
+
+

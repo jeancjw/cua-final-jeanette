@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>9 Principal Component Analysis | Exploring the Airbnb Market in Singapore</title>
+  <meta name="description" content="9 Principal Component Analysis | Exploring the Airbnb Market in Singapore" />
+  <meta name="generator" content="bookdown 0.18 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="9 Principal Component Analysis | Exploring the Airbnb Market in Singapore" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="9 Principal Component Analysis | Exploring the Airbnb Market in Singapore" />
+  
+  
+  
+
+<meta name="author" content="Jeanette Choong" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="spatial-regression.html"/>
+<link rel="next" href="conclusion.html"/>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<script src="libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/Proj4Leaflet-1.0.1/proj4-compressed.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.0.3/leaflet.js"></script>
+<script src="libs/leaflet-providers-1.9.0/leaflet-providers_1.9.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.0.3/leaflet-providers-plugin.js"></script>
+<script src="libs/plotly-binding-4.9.2.1/plotly.js"></script>
+<script src="libs/typedarray-0.1/typedarray.min.js"></script>
+<link href="libs/crosstalk-1.1.0.1/css/crosstalk.css" rel="stylesheet" />
+<script src="libs/crosstalk-1.1.0.1/js/crosstalk.min.js"></script>
+<link href="libs/plotly-htmlwidgets-css-1.52.2/plotly-htmlwidgets.css" rel="stylesheet" />
+<script src="libs/plotly-main-1.52.2/plotly-latest.min.js"></script>
+
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Exploring Airbnbs in Singapore</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Project Summary</a></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a><ul>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#research-questions-hypotheses"><i class="fa fa-check"></i><b>2.1</b> Research Questions &amp; Hypotheses</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="research-approach.html"><a href="research-approach.html"><i class="fa fa-check"></i><b>3</b> Research Approach</a></li>
+<li class="chapter" data-level="4" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html"><i class="fa fa-check"></i><b>4</b> Exploratory Data Analysis</a><ul>
+<li class="chapter" data-level="4.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#setting-up-the-data"><i class="fa fa-check"></i><b>4.1</b> Setting up the data</a></li>
+<li class="chapter" data-level="4.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#how-popular-is-airbnb-in-singapore"><i class="fa fa-check"></i><b>4.2</b> How popular is Airbnb in Singapore?</a><ul>
+<li class="chapter" data-level="4.2.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#number-of-listings-over-time"><i class="fa fa-check"></i><b>4.2.1</b> Number of listings over time</a></li>
+<li class="chapter" data-level="4.2.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#number-of-reviews-over-time"><i class="fa fa-check"></i><b>4.2.2</b> Number of Reviews over time</a></li>
+</ul></li>
+<li class="chapter" data-level="4.3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#analysis-of-different-variables"><i class="fa fa-check"></i><b>4.3</b> Analysis of different variables</a><ul>
+<li class="chapter" data-level="4.3.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#price"><i class="fa fa-check"></i><b>4.3.1</b> <code>price</code></a></li>
+<li class="chapter" data-level="4.3.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#host_listings_count"><i class="fa fa-check"></i><b>4.3.2</b> <code>host_listings_count</code></a></li>
+<li class="chapter" data-level="4.3.3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#property_type"><i class="fa fa-check"></i><b>4.3.3</b> <code>property_type</code></a></li>
+<li class="chapter" data-level="4.3.4" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#room_type"><i class="fa fa-check"></i><b>4.3.4</b> <code>room_type</code></a></li>
+<li class="chapter" data-level="4.3.5" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#reviews_per_month"><i class="fa fa-check"></i><b>4.3.5</b> <code>reviews_per_month</code></a></li>
+<li class="chapter" data-level="4.3.6" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#minimum_nights"><i class="fa fa-check"></i><b>4.3.6</b> <code>minimum_nights</code></a></li>
+<li class="chapter" data-level="4.3.7" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#planning_region"><i class="fa fa-check"></i><b>4.3.7</b> <code>planning_region</code></a></li>
+<li class="chapter" data-level="4.3.8" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#planning_area"><i class="fa fa-check"></i><b>4.3.8</b> <code>planning_area</code></a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="visualisation-of-listings.html"><a href="visualisation-of-listings.html"><i class="fa fa-check"></i><b>5</b> Visualisation of Listings</a><ul>
+<li class="chapter" data-level="5.1" data-path="visualisation-of-listings.html"><a href="visualisation-of-listings.html#listings-across-singapore"><i class="fa fa-check"></i><b>5.1</b> Listings across Singapore</a></li>
+<li class="chapter" data-level="5.2" data-path="visualisation-of-listings.html"><a href="visualisation-of-listings.html#minimum-length-of-stay-90-90-days"><i class="fa fa-check"></i><b>5.2</b> Minimum length of stay &lt; 90 &amp; &gt; 90 days</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="spatial-clustering.html"><a href="spatial-clustering.html"><i class="fa fa-check"></i><b>6</b> Spatial Clustering</a><ul>
+<li class="chapter" data-level="6.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#aggregation-to-larger-spatial-units"><i class="fa fa-check"></i><b>6.1</b> Aggregation to larger spatial units</a></li>
+<li class="chapter" data-level="6.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-of-minimum_nights-variable"><i class="fa fa-check"></i><b>6.2</b> Clustering of <code>minimum_nights</code> variable</a><ul>
+<li class="chapter" data-level="6.2.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#building-the-minimum-spanning-tree"><i class="fa fa-check"></i><b>6.2.1</b> Building the Minimum Spanning Tree</a></li>
+<li class="chapter" data-level="6.2.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-with-skater"><i class="fa fa-check"></i><b>6.2.2</b> Clustering with SKATER</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-of-price-variable"><i class="fa fa-check"></i><b>6.3</b> Clustering of <code>price</code> variable</a><ul>
+<li class="chapter" data-level="6.3.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#building-the-minimum-spanning-tree-1"><i class="fa fa-check"></i><b>6.3.1</b> Building the Minimum Spanning Tree</a></li>
+<li class="chapter" data-level="6.3.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-with-skater-1"><i class="fa fa-check"></i><b>6.3.2</b> Clustering with SKATER</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html"><i class="fa fa-check"></i><b>7</b> Spatial Autocorrelation</a><ul>
+<li class="chapter" data-level="7.0.1" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html#morans-i"><i class="fa fa-check"></i><b>7.0.1</b> Moran’s I</a></li>
+<li class="chapter" data-level="7.0.2" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html#local-value-of-autocorrelation"><i class="fa fa-check"></i><b>7.0.2</b> Local value of autocorrelation</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="spatial-regression.html"><a href="spatial-regression.html"><i class="fa fa-check"></i><b>8</b> Spatial Regression</a><ul>
+<li class="chapter" data-level="8.1" data-path="spatial-regression.html"><a href="spatial-regression.html#setting-up-the-regression"><i class="fa fa-check"></i><b>8.1</b> Setting up the regression</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="principal-component-analysis.html"><a href="principal-component-analysis.html"><i class="fa fa-check"></i><b>9</b> Principal Component Analysis</a><ul>
+<li class="chapter" data-level="9.1" data-path="principal-component-analysis.html"><a href="principal-component-analysis.html#pca-using-varimax"><i class="fa fa-check"></i><b>9.1</b> PCA using varimax</a></li>
+</ul></li>
+<li class="chapter" data-level="10" data-path="conclusion.html"><a href="conclusion.html"><i class="fa fa-check"></i><b>10</b> Conclusion</a></li>
+<li class="chapter" data-level="11" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>11</b> References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Exploring the Airbnb Market in Singapore</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="principal-component-analysis" class="section level1">
+<h1><span class="header-section-number">9</span> Principal Component Analysis</h1>
+<div class="sourceCode" id="cb158"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb158-1" data-line-number="1"><span class="kw">library</span>(tidyverse)</a>
+<a class="sourceLine" id="cb158-2" data-line-number="2"><span class="kw">library</span>(broom)</a>
+<a class="sourceLine" id="cb158-3" data-line-number="3"><span class="kw">library</span>(ggfortify)</a>
+<a class="sourceLine" id="cb158-4" data-line-number="4"><span class="kw">library</span>(psych)</a></code></pre></div>
+<div class="sourceCode" id="cb159"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb159-1" data-line-number="1">listings &lt;-<span class="st"> </span><span class="kw">readRDS</span>(here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/listings.rds&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb160"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb160-1" data-line-number="1">pc &lt;-<span class="st"> </span>listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb160-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">host_response_rate =</span> <span class="kw">as.numeric</span>(host_response_rate), <span class="dt">host_acceptance_rate=</span><span class="kw">as.numeric</span>(host_response_rate), <span class="dt">host_listings_count=</span><span class="kw">as.numeric</span>(host_listings_count)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb160-3" data-line-number="3"><span class="st">  </span><span class="kw">drop_na</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb160-4" data-line-number="4"><span class="st">  </span><span class="kw">select</span>(minimum_nights, price, reviews_per_month, review_scores_rating, reviews_per_month, host_acceptance_rate, host_listings_count, host_response_rate) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb160-5" data-line-number="5"><span class="st">  </span><span class="kw">prcomp</span>(., <span class="dt">center=</span>T, <span class="dt">scale.=</span>T)</a></code></pre></div>
+<pre><code>## Warning: NAs introduced by coercion</code></pre>
+<div class="sourceCode" id="cb162"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb162-1" data-line-number="1"><span class="kw">tidy</span>(pc, <span class="st">&quot;pcs&quot;</span>)</a></code></pre></div>
+<pre><code>## # A tibble: 7 x 4
+##      PC  std.dev percent cumulative
+##   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;
+## 1     1 1.44e+ 0   0.296      0.296
+## 2     2 1.14e+ 0   0.186      0.482
+## 3     3 1.03e+ 0   0.151      0.634
+## 4     4 1.01e+ 0   0.146      0.779
+## 5     5 9.18e- 1   0.120      0.900
+## 6     6 8.38e- 1   0.100      1    
+## 7     7 3.90e-15   0          1</code></pre>
+<div class="sourceCode" id="cb164"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb164-1" data-line-number="1">listings2 &lt;-<span class="st">  </span>listings <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb164-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">host_response_rate =</span> <span class="kw">as.numeric</span>(host_response_rate), <span class="dt">host_acceptance_rate=</span><span class="kw">as.numeric</span>(host_response_rate), <span class="dt">host_listings_count=</span><span class="kw">as.numeric</span>(host_listings_count)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb164-3" data-line-number="3"><span class="st">  </span><span class="kw">drop_na</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb164-4" data-line-number="4"><span class="st">  </span><span class="kw">select</span>(minimum_nights, price, reviews_per_month, review_scores_rating, reviews_per_month, host_acceptance_rate, host_listings_count, host_response_rate, planning_region) </a></code></pre></div>
+<pre><code>## Warning: NAs introduced by coercion</code></pre>
+<div class="sourceCode" id="cb166"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb166-1" data-line-number="1"><span class="kw">library</span>(caret)</a></code></pre></div>
+<pre><code>## Loading required package: lattice</code></pre>
+<pre><code>## 
+## Attaching package: &#39;caret&#39;</code></pre>
+<pre><code>## The following object is masked from &#39;package:purrr&#39;:
+## 
+##     lift</code></pre>
+<div class="sourceCode" id="cb170"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb170-1" data-line-number="1">plnreg &lt;-<span class="st"> </span>listings2 <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">drop_na</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb170-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(planning_region) </a>
+<a class="sourceLine" id="cb170-3" data-line-number="3">dummy_model &lt;-<span class="st"> </span><span class="kw">dummyVars</span>(<span class="op">~</span><span class="st"> </span>., <span class="dt">data =</span> plnreg)</a>
+<a class="sourceLine" id="cb170-4" data-line-number="4">dummy_sample &lt;-<span class="st"> </span><span class="kw">predict</span>(dummy_model, <span class="dt">newdata =</span> plnreg) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb170-5" data-line-number="5"><span class="st">  </span><span class="kw">as_tibble</span>()</a></code></pre></div>
+<div class="sourceCode" id="cb171"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb171-1" data-line-number="1">dummy_sample &lt;-<span class="st"> </span>dummy_sample <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb171-2" data-line-number="2"><span class="st">  </span><span class="kw">rename</span>(<span class="dt">reg_central =</span> <span class="st">`</span><span class="dt">planning_regionCentral Region</span><span class="st">`</span>, <span class="dt">reg_north=</span> <span class="st">`</span><span class="dt">planning_regionNorth Region</span><span class="st">`</span>, <span class="dt">reg_east =</span> <span class="st">`</span><span class="dt">planning_regionEast Region</span><span class="st">`</span>, <span class="dt">reg_west=</span><span class="st">`</span><span class="dt">planning_regionWest Region</span><span class="st">`</span>, <span class="dt">reg_northeast=</span><span class="st">`</span><span class="dt">planning_regionNorth-East Region</span><span class="st">`</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb172"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb172-1" data-line-number="1">pc &lt;-<span class="st"> </span><span class="kw">cbind</span>(listings2, dummy_sample) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb172-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>planning_region) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb172-3" data-line-number="3"><span class="st">    </span><span class="kw">prcomp</span>(., <span class="dt">center=</span>T, <span class="dt">scale.=</span>T)</a>
+<a class="sourceLine" id="cb172-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb172-5" data-line-number="5"><span class="kw">tidy</span>(pc, <span class="st">&quot;pcs&quot;</span>)</a></code></pre></div>
+<pre><code>## # A tibble: 12 x 4
+##       PC  std.dev percent cumulative
+##    &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;
+##  1     1 1.48e+ 0  0.182       0.182
+##  2     2 1.35e+ 0  0.153       0.335
+##  3     3 1.16e+ 0  0.112       0.446
+##  4     4 1.04e+ 0  0.0901      0.536
+##  5     5 1.02e+ 0  0.0870      0.623
+##  6     6 1.02e+ 0  0.0862      0.710
+##  7     7 1.00e+ 0  0.0838      0.793
+##  8     8 9.77e- 1  0.0796      0.873
+##  9     9 9.15e- 1  0.0698      0.943
+## 10    10 8.29e- 1  0.0572      1    
+## 11    11 3.85e-15  0           1    
+## 12    12 2.98e-15  0           1</code></pre>
+<div class="sourceCode" id="cb174"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb174-1" data-line-number="1"><span class="kw">tidy</span>(pc, <span class="st">&quot;pcs&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb174-2" data-line-number="2"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>PC, <span class="dt">y=</span>cumulative)) <span class="op">+</span><span class="st"> </span><span class="kw">geom_line</span>()</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-99-1.png" width="1400" /></p>
+<div class="sourceCode" id="cb175"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb175-1" data-line-number="1"><span class="kw">tidy</span>(pc, <span class="st">&quot;variables&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb175-2" data-line-number="2"><span class="st">  </span><span class="kw">spread</span>(<span class="dt">key =</span> <span class="st">&quot;PC&quot;</span>, <span class="dt">value=</span><span class="st">&quot;value&quot;</span>)</a></code></pre></div>
+<pre><code>## # A tibble: 12 x 13
+##    column     `1`     `2`      `3`     `4`      `5`     `6`     `7`     `8`
+##    &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;
+##  1 host_…  0.570  -0.378  -0.0532  -0.0104  0.0585   0.0378  0.0411  0.0327
+##  2 host_…  0.175   0.0874 -0.592   -0.0618  0.123   -0.0616  0.0562 -0.211 
+##  3 host_…  0.570  -0.378  -0.0532  -0.0104  0.0585   0.0378  0.0411  0.0327
+##  4 minim… -0.167   0.0404 -0.357    0.0504  0.443   -0.223  -0.190   0.153 
+##  5 price   0.0537  0.0706 -0.107    0.460  -0.512    0.0642  0.0287 -0.594 
+##  6 reg_c…  0.383   0.595   0.0918   0.0256  0.0696  -0.0447 -0.0590  0.0513
+##  7 reg_e… -0.165  -0.394   0.0554  -0.287  -0.248   -0.669  -0.0884 -0.164 
+##  8 reg_n… -0.111  -0.188   0.00191 -0.341  -0.00252  0.585  -0.611  -0.212 
+##  9 reg_n… -0.209  -0.197   0.172   -0.0164  0.463    0.234   0.605  -0.382 
+## 10 reg_w… -0.230  -0.302  -0.330    0.459  -0.202    0.231   0.0920  0.488 
+## 11 revie… -0.0193 -0.118   0.0222   0.523   0.440   -0.195  -0.424  -0.295 
+## 12 revie…  0.0753 -0.105   0.596    0.313   0.0561  -0.0413 -0.134   0.181 
+## # … with 4 more variables: `9` &lt;dbl&gt;, `10` &lt;dbl&gt;, `11` &lt;dbl&gt;, `12` &lt;dbl&gt;</code></pre>
+<div class="sourceCode" id="cb177"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb177-1" data-line-number="1"><span class="kw">tidy</span>(pc, <span class="st">&quot;variables&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb177-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(PC <span class="op">&lt;</span><span class="st"> </span><span class="dv">9</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb177-3" data-line-number="3"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>column, <span class="dt">y=</span>value))<span class="op">+</span></a>
+<a class="sourceLine" id="cb177-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb177-5" data-line-number="5"><span class="st">  </span><span class="kw">geom_col</span>(<span class="kw">aes</span>(<span class="dt">fill=</span>(value<span class="op">&gt;=</span><span class="dv">0</span>)), <span class="dt">show.legend =</span> <span class="ot">FALSE</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb177-6" data-line-number="6"><span class="st">  </span><span class="kw">coord_flip</span>() <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb177-7" data-line-number="7"><span class="st">  </span><span class="kw">facet_grid</span>(<span class="op">~</span>PC)</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-101-1.png" width="1400" /></p>
+<div class="sourceCode" id="cb178"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb178-1" data-line-number="1"><span class="kw">autoplot</span>(pc, <span class="dt">label=</span>F, <span class="dt">x=</span><span class="dv">1</span>, <span class="dt">y=</span><span class="dv">2</span>, <span class="dt">loadings =</span> T, <span class="dt">loadings.label=</span>T)</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-102-1.png" width="1400" /></p>
+<div id="pca-using-varimax" class="section level2">
+<h2><span class="header-section-number">9.1</span> PCA using varimax</h2>
+<div class="sourceCode" id="cb179"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb179-1" data-line-number="1">fa &lt;-<span class="st"> </span><span class="kw">cbind</span>(listings2, dummy_sample) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb179-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>planning_region) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb179-3" data-line-number="3"><span class="st">  </span><span class="kw">principal</span>(<span class="dt">nfactors=</span><span class="dv">8</span>, <span class="dt">rotate=</span><span class="st">&quot;varimax&quot;</span>)</a></code></pre></div>
+<pre><code>## Warning in cor.smooth(r): Matrix was not positive definite, smoothing was done</code></pre>
+<pre><code>## Warning in principal(., nfactors = 8, rotate = &quot;varimax&quot;): The matrix is not
+## positive semi-definite, scores found from Structure loadings</code></pre>
+<div class="sourceCode" id="cb182"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb182-1" data-line-number="1">fa</a></code></pre></div>
+<pre><code>## Principal Components Analysis
+## Call: principal(r = ., nfactors = 8, rotate = &quot;varimax&quot;)
+## Standardized loadings (pattern matrix) based upon correlation matrix
+##                        RC1   RC6   RC8   RC3   RC7   RC2   RC4   RC5   h2
+## minimum_nights       -0.20  0.02  0.14  0.36 -0.06 -0.07  0.44 -0.40 0.55
+## price                -0.03 -0.02  0.04  0.10 -0.05 -0.04  0.08  0.92 0.87
+## reviews_per_month     0.13 -0.05 -0.04 -0.78 -0.02 -0.08  0.19 -0.01 0.67
+## review_scores_rating  0.05  0.02 -0.01 -0.11  0.04  0.04  0.90  0.10 0.83
+## host_acceptance_rate  0.99  0.00 -0.02  0.01 -0.03 -0.01  0.00  0.00 0.98
+## host_listings_count   0.19 -0.10 -0.05  0.74 -0.06 -0.08  0.11  0.06 0.62
+## host_response_rate    0.99  0.00 -0.02  0.01 -0.03 -0.01  0.00  0.00 0.98
+## reg_central           0.03 -0.61 -0.61  0.03 -0.40 -0.30 -0.04  0.03 1.00
+## reg_east              0.01  1.00 -0.03 -0.04 -0.05 -0.04  0.02 -0.02 1.00
+## reg_north            -0.01  0.01  0.01  0.00 -0.01  0.99  0.02 -0.03 0.99
+## reg_northeast        -0.05  0.00  0.01 -0.03  0.99 -0.02  0.03 -0.04 0.99
+## reg_west             -0.03 -0.03  0.99  0.01 -0.04 -0.04  0.02  0.02 0.99
+##                          u2 com
+## minimum_nights       0.4479 3.7
+## price                0.1250 1.1
+## reviews_per_month    0.3323 1.2
+## review_scores_rating 0.1709 1.1
+## host_acceptance_rate 0.0163 1.0
+## host_listings_count  0.3814 1.3
+## host_response_rate   0.0163 1.0
+## reg_central          0.0049 3.2
+## reg_east             0.0019 1.0
+## reg_north            0.0109 1.0
+## reg_northeast        0.0054 1.0
+## reg_west             0.0109 1.0
+## 
+##                        RC1  RC6  RC8  RC3  RC7  RC2  RC4  RC5
+## SS loadings           2.07 1.38 1.38 1.30 1.16 1.10 1.06 1.03
+## Proportion Var        0.17 0.11 0.11 0.11 0.10 0.09 0.09 0.09
+## Cumulative Var        0.17 0.29 0.40 0.51 0.61 0.70 0.79 0.87
+## Proportion Explained  0.20 0.13 0.13 0.12 0.11 0.11 0.10 0.10
+## Cumulative Proportion 0.20 0.33 0.46 0.58 0.70 0.80 0.90 1.00
+## 
+## Mean item complexity =  1.5
+## Test of the hypothesis that 8 components are sufficient.
+## 
+## The root mean square of the residuals (RMSR) is  0.07 
+##  with the empirical chi square  2686.88  with prob &lt;  NA 
+## 
+## Fit based upon off diagonal values = 0.85</code></pre>
+<div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb184-1" data-line-number="1">fa[[<span class="st">&#39;loadings&#39;</span>]] <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb184-2" data-line-number="2"><span class="st">  </span><span class="kw">unclass</span>() <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb184-3" data-line-number="3"><span class="st">  </span><span class="kw">as_tibble</span>(<span class="dt">rownames=</span><span class="st">&quot;listings&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb184-4" data-line-number="4"><span class="st">  </span><span class="kw">gather</span>(<span class="dt">key=</span><span class="st">&quot;component&quot;</span>, <span class="dt">value=</span><span class="st">&quot;value&quot;</span>, <span class="op">-</span>listings) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb184-5" data-line-number="5"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x=</span>listings, <span class="dt">y=</span>value))<span class="op">+</span></a>
+<a class="sourceLine" id="cb184-6" data-line-number="6"><span class="st">  </span><span class="kw">geom_hline</span>(<span class="dt">yintercept =</span> <span class="dv">0</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb184-7" data-line-number="7"><span class="st">  </span><span class="kw">geom_col</span>(<span class="kw">aes</span>(<span class="dt">fill=</span>(value<span class="op">&gt;=</span><span class="dv">0</span>)), </a>
+<a class="sourceLine" id="cb184-8" data-line-number="8">           <span class="dt">show.legend=</span><span class="ot">FALSE</span>)<span class="op">+</span></a>
+<a class="sourceLine" id="cb184-9" data-line-number="9"><span class="st">  </span><span class="kw">ylim</span>(<span class="op">-</span><span class="dv">1</span>,<span class="dv">1</span>)<span class="op">+</span><span class="st"> </span><span class="kw">coord_flip</span>()<span class="op">+</span></a>
+<a class="sourceLine" id="cb184-10" data-line-number="10"><span class="st">  </span><span class="kw">facet_grid</span>(<span class="op">~</span>component)</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-104-1.png" width="1400" /></p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="spatial-regression.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="conclusion.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

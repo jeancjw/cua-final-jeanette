@@ -1,0 +1,146 @@
+---
+title: "Session 11 - spatial regression"
+author: "Jeanette Choong"
+date: "4/15/2020"
+output: github_document
+---
+
+## Introduction 
+
+```{r message=FALSE}
+library(tidyverse)
+library(sf)
+library(tmap)
+library(broom) # to analyse results we get from linear regression
+```
+
+Load planning areas: 
+
+```{r}
+planning_areas_sf <- st_read(here::here("data/MP14_PLNG_AREA_NO_SEA_PL.shp")) %>% 
+  filter(!(OBJECTID == 49 | OBJECTID == 18)) # remove islands
+```
+
+Planning areas data from MDS & PCA for socioeconomic status. 
+
+Join with planning_areas_sf by "PLN_AREA_N" (from planning_areas_sf) and "planning_area" from planning_areas
+
+```{r}
+planning_areas <- read_csv(here::here("data/planning_areas.csv")) %>% 
+  left_join(planning_areas_sf, ., by = c("PLN_AREA_N" = "planning_area")) %>% 
+  filter(area_hdb > 0) %>% # keep the areas where there are HDB
+  st_buffer(0) # we use this to correct shapefile issues
+```
+
+```{r}
+tm_shape(planning_areas) + tm_polygons(col = 'area_hdb')
+```
+
+```{r}
+hex_grid <- planning_areas %>%
+  st_make_grid(st_bbox(.), square = FALSE, cellsize = 1500) %>% 
+  st_sf() %>% 
+  mutate(hex_id = row_number())
+
+tm_shape(hex_grid) + tm_polygons()
+```
+
+Join planning areas with hex grid
+
+largest = T setting is for hexagons that straddle different planning areas. You want to keep the hexagon that covers more of the planning area. 
+
+We can join information from each planning area to the corresponding hexagon. Because some hexagons might intersect with multiple planning areas, we set the largest = T argument so that we use the information from the planning area that has the largest overlap.
+
+```{r}
+hex_grid <- st_join(hex_grid, planning_areas, largest = T)
+```
+```{r}
+tm_shape(hex_grid) + tm_polygons(col = 'area_hdb')
+```
+
+```{r}
+resale <- readRDS(here::here("data/resale_with_geom.rds"))
+resale_hex <- st_join(resale, hex_grid) %>%
+  st_set_geometry(NULL)
+```
+
+For each hex, we compute the mean price per sqm, mean remaining lease and mean floor area:
+
+```{r}
+hex_grid <- resale_hex %>%
+  mutate(price_sqm = resale_price / floor_area_sqm) %>%
+  group_by(hex_id) %>%
+  summarise(mean_price = mean(price_sqm),
+            mean_lease = mean(remaining_lease),
+            mean_floor_area = mean(floor_area_sqm)) %>%
+  left_join(hex_grid, .) %>%
+  filter(mean_price > 0)
+
+tm_shape(hex_grid) + tm_polygons(col = "mean_price")
+```
+
+## A naive linear model
+
+```{r}
+price_ols <- lm(mean_price ~ hh_income_lt_2000 + edu_university + mean_lease, data = hex_grid)
+glance(price_ols)
+```
+
+Fairly high rsquare, p-value is low but may not mean much which we will see later. 
+
+On the surface, this does not look like a bad model! The R-squared hovers around 0.7, which is pretty high considering we only have limited data available at the hexagon scale.
+
+When we do regression we're trying to find the best fitting coefficients for the three explanatory variables. We do this using tidy():
+
+```{r}
+tidy(price_ols)
+```
+
+Here we see the that coefficient for hh_income_lt_200 is positive (11866), same for edu_university and mean_lease. we still have a p-value that is close to 0, but one additional year on the remaining lease only seems to move the averange resale price by $34.97. On the other hand, each extra unit of hh_income_lt_2000, i.e. if it changes from 0% to 100%, we would expect mean resale price to increase by 11866.
+
+May seem strange at first that the percentage of low income is positively correlated with the resale price. Hint: more flats are single-person flats closer to the city centre, hence hh_income_lt_2000 is higher. 
+
+
+## Residuals of the model
+
+Resid is the diff between what the model estimates and the true value.
+
+```{r}
+hex_ols <- augment(price_ols, data = hex_grid) %>%
+  st_as_sf()
+
+tm_shape(hex_ols) + tm_polygons(col = ".resid", palette = "RdBu")
+```
+
+calculate the Morans I to quantify the measure of auto correlation in our data.
+
+```{r}
+library(spdep)
+hex_sp <- as(hex_ols, 'Spatial')
+
+hex_neighbors <- poly2nb(hex_sp)
+
+hex_weights <- nb2listw(hex_neighbors, style="W", zero.policy=TRUE)
+
+hex_ols$.resid_lag <- lag.listw(hex_weights, hex_ols$.resid)
+# for each hexagon, we're computing the lagged version of the residual 
+ggplot(hex_ols, aes(.resid, .resid_lag)) + geom_point() + geom_smooth()
+```
+
+```{r}
+ggplot(hex_ols, aes(.resid, .resid_lag)) + geom_point() + geom_smooth(method = lm, se=FALSE)
+```
+
+
+
+```{r}
+lm(.resid_lag ~ .resid, hex_ols)
+```
+
+0.273 is not too high and not 0 either. 
+
+```{r}
+moran.test(hex_ols$.resid, hex_weights)
+```
+
+the test says that Moran's I is signficantly greater than zero and p-value is quite small. 

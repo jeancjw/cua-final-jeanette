@@ -1,0 +1,101 @@
+---
+title: "Week 5"
+author: "Jeanette Choong"
+date: "2/18/2020"
+output: github_document
+---
+
+```{r message=FALSE}
+library(tidyverse)
+library(here)
+library(broom)
+library(lubridate)
+library(forcats)
+```
+
+
+
+# 5.2 Visualisation
+
+```{r message=FALSE}
+sales <- readRDS(here::here("data/sales.rds"))
+
+sales <- sales %>% 
+  mutate(month = ymd(month, truncated = 1), 
+         flat_type = as_factor(flat_type), 
+         storey_range = as_factor(storey_range),
+         flat_model = as_factor(flat_model))
+```
+
+```{r}
+sales %>% 
+  select(floor_area_sqm, remaining_lease, lease_commence_date, resale_price) %>%
+  pairs()
+```
+
+```{r}
+sales %>% 
+  select(floor_area_sqm, remaining_lease, lease_commence_date, resale_price) %>% 
+  sample_frac(0.05) %>% # taking a 5% sample instead of running the entire thing, takes too long
+  pairs()
+```
+
+potentially useful graphs: floor number and resale price, town and resale price?
+
+
+# 5.3 Correlation
+
+```{r}
+cor(sales$floor_area_sqm, sales$resale_price, method="pearson")
+```
+Pearson’s coefficient can only be applied on continuous variables. Luckily, we also have another correlation coefficient, Spearman’s rank correlation coefficient, that works on both continuous and ordinal variables. We first apply this to a relationship we already know.
+
+```{r}
+cor(sales$floor_area_sqm, sales$resale_price, method="spearman")
+```
+
+```{r}
+cor(as.integer(sales$storey_range), sales$resale_price, method = "spearman")
+```
+
+```{r}
+sales <- sales %>% 
+  mutate(storey_range = fct_relevel(storey_range, sort(levels(storey_range))))
+
+cor(as.integer(sales$storey_range), sales$resale_price, method = "spearman")
+```
+
+# 5.4 Regression
+
+Correlation - Allows us to summarise the direction and strength of relationship between two variables interchangeably
+
+Regression - specifies a specific dependent variable and one or more independent variables; allows us to consider a relation between more than just two variables.
+
+Form: lm (dep_var ~ indep_var)
+
+## regress floor area on resale price
+```{r message=FALSE}
+sales_2016 <- filter(sales, month > "2015-12-01" & month < "2017-01-01")
+
+ols <- lm(resale_price ~ floor_area_sqm, sales_2016)
+
+glance(ols) #glance returns goodness of fit measures
+```
+While there is positive relationship between resale price and the floor area of HDB, the r-squared value is low perhaps because the human aspect of resale housing market makes it less predictable.
+
+
+```{r}
+tidy(ols)
+```
+
+```{r}
+sales_ols <- augment(ols, data = sales_2016)
+sales_ols
+```
+
+```{r}
+sales_ols %>% 
+  ggplot(aes(x=.resid))+
+  geom_histogram(bins=50)
+```
+Not normally distributed.

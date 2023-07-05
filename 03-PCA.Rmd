@@ -1,0 +1,146 @@
+# Principal Component Analysis (PCA)
+
+For this section, I plan to use PCA to understand how the different variables may be correlated. This may provide some insight into the pricing and spatial distribution of the Airbnb listings, which may have been difficult to visualise from the previous sections.
+
+```{r}
+library(tidyverse)
+library(broom)
+library(ggfortify)
+library(psych)
+library(patchwork)
+```
+
+```{r}
+listings <- readRDS(here::here("projdata/listings.rds"))
+```
+
+## Extract components & scale data
+
+The following variables were selected: ```host_response_rate```, ```host_acceptance_rate```, ```host_listings_count```, ```minimum_nights```, ```price```, ```reviews_per_month``` and  ```review_scores_rating```. These variables were selected mostly because they are the few continuous variables in the dataset that would potentially have some effect on one another. 
+
+```{r}
+pc <- listings %>%
+  mutate(host_response_rate = as.numeric(host_response_rate), host_acceptance_rate=as.numeric(host_acceptance_rate), host_listings_count=as.numeric(host_listings_count)) %>% 
+  drop_na() %>% 
+  select(minimum_nights, price, reviews_per_month, review_scores_rating, host_acceptance_rate, host_listings_count, host_response_rate) %>% 
+  prcomp(., center=T, scale.=T)
+
+tidy(pc, "pcs")
+```
+
+```{r}
+listings2 <-  listings %>% 
+  mutate(host_response_rate = as.numeric(host_response_rate), host_acceptance_rate=as.numeric(host_acceptance_rate), host_listings_count=as.numeric(host_listings_count)) %>% 
+  drop_na() %>% 
+  select(minimum_nights, price, reviews_per_month, review_scores_rating, reviews_per_month, host_acceptance_rate, host_listings_count, host_response_rate, planning_region) 
+```
+
+As I wanted to include planning areas in the components, there was a need to train the data such that they were presented as numerical (1s and 0s), which would then allow for the joining to the other components for analysis. 
+
+```{r}
+library(caret)
+plnreg <- listings2 %>% drop_na() %>% 
+  select(planning_region) 
+dummy_model <- dummyVars(~ ., data = plnreg)
+dummy_sample <- predict(dummy_model, newdata = plnreg) %>%
+  as_tibble()
+```
+
+
+```{r}
+# rename columns
+dummy_sample <- dummy_sample %>% 
+  rename(reg_central = `planning_regionCentral Region`, reg_north= `planning_regionNorth Region`, reg_east = `planning_regionEast Region`, reg_west=`planning_regionWest Region`, reg_northeast=`planning_regionNorth-East Region`)
+```
+
+
+```{r}
+pc <- cbind(listings2, dummy_sample) %>% 
+  select(-planning_region) %>% 
+    prcomp(., center=T, scale.=T)
+
+tidy(pc, "pcs")
+```
+
+```{r}
+tidy(pc, "pcs") %>% 
+  ggplot(aes(x=PC, y=cumulative)) + geom_line() + geom_hline(yintercept=0.9, col="blue") + geom_text(aes(x=PC, y=cumulative, label=PC), nudge_y = 0.03)
+```
+
+The scree plot above shows the cumulative variance of the components and a threshold line of 90% explained variance (blue). From the plot, we can see that 90% of the variance is explained somewhere around the ninth component. Hence, I start off by keeping nine components. However, I do note that the scree plot is not exactly very clear (it seems almost linear for most part), perhaps due to the inclusion of the planning regions as components. 
+
+
+```{r}
+tidy(pc, "variables") %>% 
+  spread(key = "PC", value="value")
+```
+
+```{r fig.width=10}
+tidy(pc, "variables") %>% 
+  filter(PC < 10) %>% 
+  ggplot(aes(x=column, y=value))+
+  geom_hline(yintercept = 0) + 
+  geom_col(aes(fill=(value>=0)), show.legend = FALSE)+
+  coord_flip() + 
+  facet_grid(~PC)
+```
+
+The first component shows that for a positive value for all planning regions other than the central region,  ```reg_central``` showed a very low value. This suggests that the central region is very different from the other regions, and is perhaps a reflection of the number of listings that are within the central region, which is way more than in other regions. ```price``` also showed a low value, which probably suggests that prices are significantly different in the central region as compared to the other regions. Althought we established earlier that price difference were marginal, it could be that this model takes into account the outliers in the Southern Islands, which cost almost $10,000 per night. This amount is nearly 100 times the mean price of an Airbnb in Singapore. We also see a correlation between the ```host_response_rate``` and ```host_acceptance_rate``` with the ```reg_central```. While these variables were not really explored earlier, it could provide important information, that the listings in the central area are more active than in other areas. Interestingly, a positive value for ```minimum_nights``` yield a negative value for ```reg_central``` but positive value for all other regions. This could mean that either the central region or the rest of Singapore is more likely to flout the rules. However, on hindsight, this could be a reflection of the sheer number of listings in the central region. Therefore, it may have a lot more listings with ```minimum_nights``` that are low as compared to the number of listings of the same kind in the other parts of Singapore. Therefore we can only conclude from the first component that the central area is very different from the other areas in terms of ```price```, ```minimum_nights```, ```host_response_rate``` and ```host_acceptance_rate```.
+
+The second component shows that a low value for ```minimum_nights``` corresponds to a high value for ```reviews_per_month```, which makes sense because reviews would be more frequent if the length of stay is shorter. It then adds a nuance to the first component by showing that ```reg_west``` is somewhat like ```reg_central``` in terms of ```price```, ```minimum_nights``` and ```host_listings_count```. The correlation with price can be explained by an outlier listing in Tuas that costs almost as much as those in the Southern Islands. The high ```reviews_per_month``` is also correlated with the ```reg_east``` and ```east```, which suggests that these regions also have a high number of listings that potentially are flouting the rules.
+
+The third component shows that the east and west regions have the different ratings from the other regions, and does not add much more nuance from here on. 
+
+Therefore, while the scree plot suggested to keep 9 components, perhaps three would have been sufficient. 
+
+```{r}
+autoplot(pc, label=F, x=1, y=2, loadings = T, loadings.label=T)
+```
+
+From the loadings plot I can confirm that the central region is very different from the rest of Singapore, but it is generally quite difficult to read.
+
+
+## PCA using varimax
+
+```{r}
+fa <- cbind(listings2, dummy_sample) %>% 
+  select(-planning_region) %>%
+  principal(nfactors=3, rotate="varimax")
+
+
+fa
+```
+
+```{r fig.width=10}
+fa[['loadings']] %>% 
+  unclass() %>% 
+  as_tibble(rownames="listings") %>% 
+  gather(key="component", value="value", -listings) %>% 
+  ggplot(aes(x=listings, y=value))+
+  geom_hline(yintercept = 0)+
+  geom_col(aes(fill=(value>=0)), 
+           show.legend=FALSE)+
+  ylim(-1,1)+ coord_flip()+
+  facet_grid(~component) | 
+tidy(pc, "variables") %>% 
+  filter(PC < 4) %>% 
+  ggplot(aes(x=column, y=value))+
+  geom_hline(yintercept = 0) + 
+  geom_col(aes(fill=(value>=0)), show.legend = FALSE)+
+  coord_flip() + 
+  facet_grid(~PC)
+```
+
+Based on the previous analysis, I changed the number of components to 3 for the varimax method. 
+
+The conclusions are the same for the first component as seen from the above plot. 
+
+For the second component, we see a similar patterm that a low value for ```minimum_nights``` corresponds to a high value for ```reviews_per_month```, which makes sense because reviews would be more frequent if the length of stay is shorter. However, we see that the west is different from the north-east and central regions in terms of reviews per month and host acceptance rate. Low reviews per month in the west suggests that a higher likelihood of flouting the rules.
+
+For the varimax method, it shows that the east region is quite different from the other regions and it correlated with the other variables except for price. This highlights that prices in the east could be very different from the rest of Singapore. 
+
+## Reflections on PCA
+
+I find that to some extent, performing PCA was helpful in understanding and confirming which variables were correlated and which were not. Because of the added dimension, it helped me draw links between variables I did not think were related. 
+
+However the challenge was in deciding the number of components to keep. While the scree plot shows that 9 components, I found that it was not very meaningful to go beyond 3 components. My guess is that the scree plot was not a good indication because of the planning regions that I added in as variables. However, there was some useful analysis, that helped to confirm what I found in the previous section, and also gives room for further exploration into other variables that I did not really delve into for this project. 

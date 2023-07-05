@@ -1,0 +1,127 @@
+---
+title: "Session 10"
+author: "Jeanette Choong"
+date: "4/14/2020"
+output: github_document
+---
+
+```{r message = FALSE}
+library(tidyverse)
+library(spdep)
+library(tmap)
+```
+
+
+# Spatial autocorrelation
+
+Step 1: Construct a list of neighbours for each area
+
+```{r}
+remaining_lease <- readRDS(here::here("data/remaining_lease.rds"))
+
+hex_sp <- as(remaining_lease, 'Spatial')
+
+hex_neighbours <- poly2nb(hex_sp)
+
+plot(hex_neighbours, coordinates(hex_sp))
+```
+
+Step 2: Assign a weight to the relationship to each neighbour. i.e. if a hexagon has 4 neighbours, each neighbour will weigh 1/4. This is similar to doing the moving average in space rather than over time. 
+
+```{r}
+hex_weights <- nb2listw (hex_neighbours, style="W", zero.policy = TRUE)
+```
+
+Step 3: calculate a spatially lagged version of the variable of interest. In this case, this creates an average years of lease left for all the neighbours of a hexagon. ```lag.listw``` is an ```spdep``` function that does just that. 
+
+```{r}
+lease_lag <- lag.listw(hex_weights, hex_sp$remaining_lease)
+```
+
+```lease_lag``` is a list of length equal to the number of hexagons we have. Before plotting it in, we need to assign ```lease_lag``` value to its hexagon. 
+
+Step 4: Join ```lease_lag``` to  ```remaining_lease``` by the hex_id
+
+
+```{r}
+lease_lag_df <- remaining_lease %>% 
+  add_column(lease_lag = lease_lag)
+
+current.mdoe <- tmap_mode("plot")
+tm_shape(lease_lag_df) + tm_polygons(col="lease_lag")
+```
+
+### Exercise
+
+Compare the plot of ```lease_lag``` that we have just produced with the plot of ```remaining_lease``` (you can reuse ```lease_lag_df``` since it has a ```remaining_lease``` column, or try out tm_facets). What do you observe?
+
+
+```{r}
+tm_shape(lease_lag_df) + tm_polygons(col="remaining_lease")
+```
+
+The ```lease_lag``` plot was smoothing over space
+
+
+## Moran's I
+
+Step 5: Compute spatial autocorrelation - the measure of correlation between the average remaining lease at one point to the average remaining lease in points around it. 
+
+```{r}
+ggplot(lease_lag_df) + 
+  geom_point(aes(x=remaining_lease, y = lease_lag))
+```
+
+What is this plot telling us?
+
+* When ```remaining_lease``` is low, we also see a low spatially lagged variable (```lease_lag```)
+* When ```remaining_lease``` is high, we also see a high spatially lagged variable (```lease_lag```)
+
+What this means is the value we measure in one hexagon seems to be positively dependent on the value we measure in neighbouring hexagons.
+
+In other words, there is a positive autocorrelation between ```remaining_lease``` and ```lease_lag```.
+
+To measure this correlation, we compare the ```lease_lag``` with the original ```remaining_lease``` variable by regressing the original variable on the spatially-lagged version. We call this metric the ‘Moran’s I’.
+
+```{r}
+moran_manual <- lm(lease_lag ~ remaining_lease, data=lease_lag_df)
+
+moran_manual
+```
+
+In social data, a correlation of 0.5 is considered a fairly strong positive correlation. 
+
+Adding the regression line:
+
+```{r}
+ggplot(lease_lag_df,
+       aes(x = remaining_lease, y = lease_lag)) +
+  geom_point() +
+  geom_smooth(method = lm, se = FALSE)
+```
+
+
+```{r}
+moran_auto <- moran.test(lease_lag_df$remaining_lease, hex_weights)
+```
+
+
+## Local value of autocorrelation
+
+Just as we can calculate spatial autocorrelation globally, we can also look at this on a more local scale. 
+
+In ```spdep``` Moran's I has a local counterpart called ```localmoran```. 
+Instead of a global metric, it will give an indication of how much clustering is present around each polygon and indicates whether the neighbourhood values indicate a cold’ cluster or a ‘hot’ cluster. In our case: cold means fewer years left on the lease!
+
+
+```{r}
+moran_local <- localmoran(lease_lag_df$remaining_lease, hex_weights)
+lease_lag_df$moran <- moran_local[,1] # extracting the first column of moran_local i.e. the local indicator (li)
+
+tm_shape(lease_lag_df) +
+  tm_polygons(col = "moran", palette = "-RdBu")
+```
+
+local moran takes in the point statistics for remaining lease and the weights.Punggol new flats = hot spot. Outram, old estate = cold spot. 
+
+'li' = local indicator

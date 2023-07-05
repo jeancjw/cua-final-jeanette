@@ -1,0 +1,712 @@
+# Exploratory Data Analysis
+
+## Setting up the data
+```{r message=FALSE}
+knitr::opts_chunk$set(dpi = 200)
+```
+
+
+
+```{r message = FALSE}
+library(tidyverse)
+library(here)
+library(sf)
+library(skimr)
+library(lubridate)
+library(forcats)
+library(tmap)
+library(psych)
+library(RColorBrewer)
+```
+
+```{r}
+listings <- read_csv(here::here("projdata/listings-mar20.csv"))
+```
+
+```{r}
+listings <- listings %>%
+  select(id, name, listing_url, description, host_id, host_name, host_since, host_response_time, host_response_rate, host_acceptance_rate, host_is_superhost, host_listings_count, property_type, room_type, price, minimum_nights, neighbourhood_cleansed, neighbourhood_group_cleansed, latitude, longitude, number_of_reviews, number_of_reviews_ltm, review_scores_rating, reviews_per_month)
+
+
+listings <- rename(listings, planning_area = neighbourhood_cleansed, planning_region = neighbourhood_group_cleansed)
+
+saveRDS(listings, here::here("projdata/listings.rds"))
+```
+
+
+## Popularity of Airbnbs
+
+### Number of listings over time
+
+Data for Airbnb listings in Singapore is only available as far back as March 2019. Based on monthly listings data, we can see that the number of listings remained relatively stable, with minor seasonal "peaks" in the months of May, June and December, which are usually holiday season. 
+
+```{r}
+# values based on number of observations from previous months' listings
+listings_time <- tribble(
+  ~month, ~total_listings,
+  "mar20", 7713,
+  "feb20", 8047,
+  "jan20", 7857,
+  "dec19", 8000,
+  "nov19", 7857,
+  "oct19", 7794,
+  "sep19", 7675,
+  "aug19", 7907,
+  "jul19", 8033,
+  "jun19", 8293,
+  "may19", 8325,
+  "apr19", 8090,
+  "mar19", 7975
+)
+
+month_order <- rev(listings_time$month)
+
+listings_time %>%
+  mutate(month = ordered(month, levels = month_order)) %>%
+  ggplot(aes(x = month, y = total_listings)) +
+  geom_col(color = "grey", fill = "paleturquoise3") +
+  geom_text(aes(label = total_listings), vjust = -0.5, size = 3) +
+  labs(y = "Total listings")
+```
+
+Due to the lack of data, it is not possible to look at how the number of listings evolved since the implementation of the laws in 2017, based on the listings data. Instead, the reviews data can be used as a proxy for how popular the Airbnb platform has been over the years. 
+
+
+### Number of Reviews over time
+
+```{r}
+reviews <- read_csv(here::here("projdata/reviews-mar20.csv"))
+```
+
+Plotting the number of reviews for each date since May 2011 till March 2020 makes the data quite difficult to read although we can see a general upward trend.
+
+```{r}
+reviews %>% ggplot() +
+  geom_bar(aes(date)) +
+  labs(y = "number of reviews")
+```
+
+To make things neater, we can look at the aggregated number of reviews in each year.
+
+```{r}
+reviews_year <- reviews %>%
+  mutate(year = case_when(
+    date = str_detect(date, "2011") ~ "2011",
+    date = str_detect(date, "2012") ~ "2012",
+    date = str_detect(date, "2013") ~ "2013",
+
+    date = str_detect(date, "2014") ~ "2014",
+    date = str_detect(date, "2015") ~ "2015",
+    date = str_detect(date, "2016") ~ "2016",
+    date = str_detect(date, "2017") ~ "2017",
+    date = str_detect(date, "2018") ~ "2018",
+    date = str_detect(date, "2019") ~ "2019",
+    date = str_detect(date, "2020") ~ "2020"
+  )) %>%
+  group_by(year) %>%
+  count()
+
+reviews_year
+```
+
+```{r}
+reviews_year %>%
+  filter(year != "2011") %>%
+  filter(year != "2020") %>% # exclude 2020 as it's only a few months into the year, and exclude 2011 as data only beganfrom mid-year
+  ggplot() +
+  geom_line(aes(x = year, y = n, group = NA)) +
+  geom_point(aes(x = year, y = n)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0)) +
+  ggtitle("Number of reviews over the years") + 
+  labs(y = "no. of reviews") 
+
+
+```
+
+As can be seen in the plot above, there is a year-on-year increase in the number of reviews, which can mean (1) the number of listings has increased over the years, (2) the number of tenants per listing has increased over the years, or both. In any case, this may be an indication that the law is being flouted. 
+
+
+## Analysis of different variables
+
+```{r}
+listings %>% head()
+```
+
+```{r}
+listings <- listings %>%
+  mutate(
+    host_name = as_factor(host_name),
+    property_type = as_factor(property_type),
+    planning_area = as_factor(planning_area),
+    planning_region = as_factor(planning_region),
+    room_type = as_factor(room_type),
+    price = as.numeric(gsub("[\\$]", "", price))
+  )
+
+listings
+```
+
+### ```price``` 
+```{r}
+summary(listings$price)
+```
+
+```{r}
+describe(listings$price)
+```
+
+A quick glance at the descriptive statistics on the ```price``` variable shows us that the median is lower than the mean, and the skew is positive. This is unsurprising considering that the Airbnb hosts can generally choose how they want to price their listings. Furthermore, the dataset includes listings that are either entire home/apartments, private rooms, or hotel rooms, and within these types, are different types of houses such as bungalows, apartments, condominiums, which would affect the prices too. Since in the context of the law, where HDB flats are only allowed to be rented out for a period of six consecutive months, or 180 days, to non-tourists, while private homes have to fulfill a minimum rental length of three consecutive months or 90 days, it is safe to expect more of these listings to be private homes as it is easier to rent them out. This could explain the right skew.
+
+Visually, this is how it looks:
+
+```{r}
+listings %>% 
+  filter(price < 1000) %>% # remove outliers
+ggplot() +
+  geom_histogram(aes(x = price), binwidth = 10)
+```
+
+
+
+### ```host_listings_count```
+
+```{r}
+summary(listings$host_listings_count)
+```
+
+```{r}
+describe(listings$host_listings_count)
+```
+
+The summary shows that the lowest number of listings is 0, which is strange because all of them have at least one listing, and some have multiple listings. Perhaps the data failed to capture some of this. To check the data, we can use the ```host_id``` identifier to  count the number of listings they have.
+
+```{r}
+host_listings_count <- listings %>%
+  group_by(host_id) %>%
+  count() %>%
+  arrange(-n)
+
+listings <- listings %>%
+  select(-host_listings_count)
+
+host_listings_count <- host_listings_count %>%
+  left_join(listings, by = "host_id")
+
+listings <- host_listings_count %>%
+  mutate(host_listings_count = as.numeric(n)) %>%
+  select(-n)
+```
+
+After cleaning up the data, we can look at the descriptive statistics again:
+```{r}
+summary(listings$host_listings_count)
+```
+
+```{r}
+describe(listings$host_listings_count)
+```
+
+Now the lowest number of listings per host makes more sense. The maximum number of listings for a single host is 342, which is still a very high value, and may hint that Airbnb Singapore allows full-fledged rental businesses to operate using their platform. 
+
+```{r}
+listings %>%
+  arrange(-host_listings_count) %>%
+  head() %>%
+  select(host_name, host_listings_count)
+```
+
+For example, the host Jay has the most listings, a total of 342, and the mean number of listings is about 50, which is indicative of the fact that most Airbnb hosts in Singapore are not individual homeowners, whom Airbnb set out for the platform to be targeted at. 
+
+### ```property_type```
+
+```{r}
+summary(listings$property_type)
+```
+
+After looking through the dataset, I realised some of the property types can be combined based on the description and url of the listing. 
+
+```{r}
+listings <- listings %>%
+  mutate(property_type = recode(property_type, "Heritage hotel (India)" = "Hotel", "Boutique hotel" = "Hotel", "Bus" = "Apartment", "Cabin" = "Hotel", "Earth house" = "Apartment", "Tiny house" = "Hotel", "Aparthotel" = "Hotel", "Heritage hotel (India)" = "Hotel", "Aparthotel" = "Hotel", "Bed and breakfast" = "Hostel/Dorm", "Hostel" = "Hostel/Dorm", "Villa" = "House", "Bungalow" = "House", "House" = "House"))
+```
+
+
+```{r}
+summary(listings$property_type)
+```
+
+Here we see the types of housing being rented out over Airbnb. Interestingly, a number of hotels have taken to the Airbnb platform to promote their listings, which means that while Airbnbs have been reported to have negative effects on the hotel industry, it could potentially also benefit the boutique hotels.
+
+### ```room_type```
+
+```{r}
+summary(listings$room_type)
+```
+
+The room type is clearer on which listings are indeed individual homes, and which ones are hotel rooms. From the previous ```property_type``` summary, this was not as clear because of some overlaps in description of the listings. For example, under 'Others', there were a mix of different property types ranging from HDB flats to capsule hotels, to private homes and higher-end luxurious hotels.
+
+### ```reviews_per_month```
+
+```{r}
+summary(listings$reviews_per_month)
+```
+```{r}
+describe(listings$reviews_per_month)
+```
+
+
+While we cannot ensure that every guest leaves a review, it can be used as a proxy to how many listings are flouting the law.
+
+For example, in a given private home listing, one would expect that the number of reviews for that listing per month should be a maximum of 1 review every 3 months (i.e. approximately 0.33 reviews per month). For a HDB listing, this number would be 0.17 reviews per month. 
+
+However, as we can see from the summary of the descriptive statistics, the mean number of reviews per month for each listing is about 0.94, which is way higher than the expected number based on the law. 
+
+As the law on short-term accommodations was only implemented on 6 Feb 2017 (Wong, 2017), it would only be fair to consider the number of reviews after the law was implemented. 
+
+```{r}
+reviews_after_law_2017 <- reviews %>%
+  filter(date > "2017-02-06" & date < "2018-01-01")
+
+reviews_after_law_2017
+```
+
+```{r}
+reviews_after_law_2018_2019 <- reviews %>%
+  filter(date > "2017-12-31" & date < "2020-01-01")
+```
+
+```{r}
+reviews_after_law_2020 <- reviews %>%
+  filter(date > "2019-12-31")
+```
+
+
+```{r}
+reviews_after_law_2017 <- reviews_after_law_2017 %>%
+  group_by(listing_id) %>%
+  count() %>%
+  left_join(reviews_after_law_2017, by = "listing_id") %>%
+  mutate(reviews_per_month = n / 11) # only 11 months considered
+```
+
+ 
+```{r}
+reviews_after_law_2018_2019 <- reviews_after_law_2018_2019 %>%
+  group_by(listing_id) %>%
+  count() %>%
+  left_join(reviews_after_law_2018_2019, by = "listing_id") %>%
+  mutate(reviews_per_month = n / 12) # full year considered
+```
+ 
+ 
+```{r}
+reviews_after_law_2020 <- reviews_after_law_2020 %>%
+  group_by(listing_id) %>%
+  count() %>%
+  left_join(reviews_after_law_2020, by = "listing_id") %>%
+  mutate(reviews_per_month = n / 3) # only 3 months considered
+```
+ 
+ 
+```{r}
+reviews_after_law <- rbind(reviews_after_law_2017, reviews_after_law_2018_2019, reviews_after_law_2020)
+
+reviews_after_law <- reviews_after_law %>%
+  select(-n)
+
+reviews_after_law
+```
+
+```{r}
+summary(reviews_after_law$reviews_per_month)
+```
+
+Surprisingly, the number of reviews per month for each listing was actually much more than when it was averaged out across the time period that the dataset contained (May 2011- Mar 2020). This not ony suggests the obvious that several listings are flouting the rules, but also shows that the policy may not have had much of an impact on how Airbnb hosts in Singapore rented out their flats. In fact, considering that there have only five individuals who have been fined under this law, it probably suggests that there has been little enforcement, or that the government is facing challenges in policing these illegal rentals. 
+
+
+### ```minimum_nights```
+
+Another variable of interest when it comes to whether listings might be flouting the law is the minimum night of stay. 
+
+```{r}
+summary(listings$minimum_nights)
+```
+
+```{r}
+describe(listings$minimum_nights)
+```
+
+For minimum nights, we are mostly interested in listings that allow their guests to stay below 90 nights as these listing are likely the ones who are flouting the rules. Seeing that the mean number of nights of stay stands at 19.09 days, it shows that there are several illegal rentals going on.
+
+
+
+### ```planning_region```
+
+```{r}
+summary(listings$planning_region)
+```
+
+```{r}
+ggplot(listings, aes(x = fct_infreq(planning_region), fill = room_type)) +
+  geom_bar() +
+  labs(
+    title = "No. of listings by region",
+    x = "Pln Region", y = "No. of listings by region and room type"
+  ) +
+  theme_light()
+```
+
+If most listings are in the Central Region, it is quite possible that these listings target short-term stays, just as how many hotels are located centrally. 
+
+
+```{r}
+ggplot(listings, aes(x = fct_infreq(planning_region), fill = property_type)) +
+  geom_bar() +
+  labs(
+    title = "No. of listings by region",
+    x = "Pln Region", y = "No. of listings and property type"
+  ) +
+  theme_light()
+```
+
+
+
+### ```planning_area```
+
+```{r}
+listings %>%
+  group_by(planning_area) %>%
+  summarize(
+    num_listings = n(),
+    region = unique(planning_region)
+  ) %>%
+  top_n(n = 10, wt = num_listings) %>%
+  ggplot(aes(
+    x = fct_reorder(planning_area, num_listings),
+    y = num_listings, fill = region
+  )) +
+  geom_col() +
+  coord_flip() +
+  theme(legend.position = "bottom") +
+  labs(
+    title = "Top 10 neighbourhoods by no. of listings",
+    x = "Neighbourhood", y = "No. of listings"
+  )
+```
+
+The above plot shows the top 10 neighbourhoods based on the number of listings. As expected, most of these neighbourhoods are from the central region, but it is interesting to note that Kallang and Geylang are the top two neighbourhoods as they are not exactly considered tourist hotspots. 
+
+
+# Visualising spatial distribution of Listings
+
+```{r}
+listings_sf <- st_as_sf(listings, coords = c("longitude", "latitude"), crs = 4326) %>%
+  st_transform(3414)
+# convert coordinates to SVY21
+```
+
+
+```{r}
+pln_region_poly <- read_sf(here::here("projdata/pln_boundary/MP14_REGION_WEB_PL.shp"))
+```
+
+## By planning region
+
+```{r fig.width=9}
+tmap_mode("plot")
+tm_shape(listings_sf) +
+  tm_symbols(col = "planning_region", shape = 21, size = 0.1, border.col = "grey21", border.lwd = 0.5, palette = "Set2") + tm_shape(pln_region_poly) + tm_borders(col = "black", lwd = 1, lty = "solid") + tm_text("REGION_N", size = 0.8) + tm_layout(legend.outside = T)
+```
+
+Visualising all the listings in Singapore, it is clear that the central region has the most number of listings, and the north has the least.
+
+## By property type
+
+
+```{r}
+tm_shape(listings_sf) +
+  tm_dots(col = "property_type", size = 0.1, palette="Paired") + tm_shape(pln_region_poly) + tm_borders(col = "black", lwd = 1, lty = "solid") + tm_text("REGION_N", size = 0.8) + tm_layout(legend.outside = TRUE)
+```
+
+
+## By minimum length of stay
+
+```{r}
+below_90 <- listings_sf %>%
+  filter(minimum_nights < 89) # I used 89 instead of 90 because the variable counts the number of nights rather than days
+
+above_90 <- listings_sf %>%
+  filter(minimum_nights > 88)
+```
+
+```{r}
+tm_shape(below_90) + tm_dots(col = "red", size = 0.1) + tm_shape(above_90) + tm_dots(col = "green", alpha = 0.4, size = 0.1) + tm_shape(pln_region_poly) + tm_borders(col = "black", lwd = 1, lty = "solid") + tm_text("REGION_N", size = 0.8)
+```
+
+In order to visualise areas where there are potentially more listings that are in violation of the law, we can group them based on the minimum length of stay, which is given by the ```minimum_nights``` variable. As it is not possible to distinguish between HDB flats and private homes, I used 90 days as the cut off point to differentiate listings that are compliant and those that are potentially errant. From the plot, it is clear that many listings are potentially illegal (red) as they require a minimum length of stay of less than 90 days. However, it is difficult to tell how the two types of listings vary between planning regions and neighbourhoods/planning areas. 
+
+Therefore, we can use a bar chart to visualise this.
+ 
+
+```{r}
+length_stay <- listings %>% 
+  mutate(length_of_stay = case_when(minimum_nights < 89 ~ "below_90", minimum_nights >88 ~"above_90")) %>% 
+  select(planning_area, planning_region, length_of_stay) 
+
+length_stay
+```
+
+```{r}
+ggplot(length_stay, aes(x = fct_infreq(planning_region), fill = length_of_stay)) +
+  geom_bar() +
+  labs(
+    title = "No. of listings by length of stay",
+    x = "Planning Region", y = "No. of listings"
+  ) +
+  theme_light()
+```
+
+From this chart, it is clear that in every planning area, the proportion of listings that are potentially flouting the rules is significantly higher than those that are compliant. Since most of the listings are in the central area, it is unsurprising that the bulk of potentially errant listings are also situated there.
+
+```{r fig.width= 12}
+ggplot(length_stay, aes(x = fct_infreq(planning_area), fill = length_of_stay)) +
+  geom_bar() +
+  labs(
+    title = "No. of listings by length of stay",
+    x = "Neighbourhood", y = "No. of listings"
+  ) + 
+  facet_wrap(vars(planning_region), scales = "free_y")+
+  coord_flip()+
+  theme_light() 
+```
+
+A breakdown of the listings by neighbourhoods reveals that almost all neighbourhoods have at least one errant listing, but in general, the trend seems to be that even within neighbourhoods, there are more potentially illegal listings as compared to compliant ones.
+
+## By proximity to MRT stations
+
+Another factor that could potentially explain the spatial distribution of these listings is their proximity to an MRT station.
+Therefore, I chose to overlay the MRT station data and analyse which listings are within reasonable walking distance of an MRT station. 
+
+### Load MRT data
+
+```{r}
+stations <- read_sf(here::here("projdata/MRTLRTStnPtt.shp"))
+glimpse(stations)
+```
+
+```{r}
+library(httr)
+library(osmdata)
+library(tmap)
+
+# MRT lines taken from OpenStreetMap here - https://wiki.openstreetmap.org/wiki/Mass_Rapid_Transit_%28Singapore%29
+# the downtown line has id '2313458', we can use this to download directly from OSM based on the id
+opq_osm_id(id = 2313458, type = "relation") %>%
+  opq_string() %>%
+  osmdata_sf() %>%
+  .$osm_multilines
+
+# combine all MRT & LRT lines into a single table
+lines <- tribble(
+  ~line, ~id,
+  "EW East Bound", 445764,
+  "EW West Bound", 2312796,
+  "NS North Bound", 445768,
+  "NS South Bound", 2312797,
+  "NE", 2293545,
+  "CC", 2076291,
+  "DT", 2313458,
+  "BP LRT", 1159434,
+  "SK LRT East Loop", 9663107,
+  "SK LRT West Loop", 1146941,
+  "PG LRT East Loop", 1146942,
+  "PG LRT West Loop", 2312984
+)
+
+# create a function to download the data from osm based on the relation id
+# logic cribbed from https://github.com/ropensci/osmdata/issues/95
+
+download_mrt_line_from_osm <- function(id) {
+  opq_osm_id(id = id, type = "relation") %>%
+    opq_string() %>%
+    osmdata_sf() %>%
+    .$osm_multilines
+}
+
+# apply function to all ids
+lines_sf <- map(lines$id, download_mrt_line_from_osm)
+
+# check if we're succesful by plotting a single list element
+plot(lines_sf[[7]])
+
+# combine all lines into a single sf object
+lines_sf <- rbind_list(lines_sf) %>%
+  st_as_sf(crs = 4326) %>%
+  st_transform(3414) %>%
+  mutate_if(is.factor, as.character)
+tm_shape(lines_sf) + tm_lines(col = "colour")
+write_sf(lines_sf, "mrt_lines.shp")
+```
+
+```{r}
+library(mapedit)
+library(mapview)
+```
+
+First we can create a buffer around the MRT stations. I used a buffer of 800m as it is of a reasonable walking distance (10 minutes walk).
+
+```{r}
+stations %>% 
+  st_buffer(800) %>%  # map units are in meter
+  mapview()
+```
+
+```{r}
+station_800m <- stations %>% 
+  st_buffer(800) # create 800 m buffer around each station
+
+station_800m_union <- st_union(station_800m) # join buffer into one layer
+
+mapview(station_800m_union)
+```
+
+
+```{r}
+listings_sf <- st_as_sf(listings, coords = c("longitude", "latitude")) %>%
+  st_set_crs("+proj=longlat +datum=WGS84") %>% # projection we start from
+  st_transform(station_800m_union %>% st_crs()) # projection we want to get to
+```
+
+
+```{r}
+station_800m_union <- st_set_crs(station_800m_union, 3414) %>% 
+    st_transform(listings_sf %>% st_crs())
+```
+
+
+
+
+```{r}
+# obtain listings within 800m of MRT
+p <- st_intersects(station_800m_union, listings_sf, sparse = F) %>% as.vector()
+
+listings_buffer <- listings_sf[p,]
+
+count_800 <- 4537
+```
+
+
+```{r}
+# obtain listings beyond 800m of MRT
+p_out <- st_disjoint(station_800m_union, listings_sf, sparse = F) %>% as.vector()
+
+listings_outside_buffer <- listings_sf[p_out,]
+
+count_out_800 <- 3176
+```
+
+
+```{r}
+tm_shape(lines_sf) + tm_lines(col = "colour", lwd = 2) + 
+  tm_shape(stations) + tm_dots(size = 0.4, col = "black") + 
+  tm_shape(listings_buffer) + tm_dots(col="blue", size = 0.2, alpha=0.5) + 
+    tm_shape(listings_outside_buffer) + tm_dots(col="orange", size = 0.2, alpha=0.5) + 
+  tm_shape(pln_region_poly) + tm_borders(col = "black", lwd = 1, lty = "solid") + tm_text("REGION_N", size = 0.8)
+```
+
+### Assessing prices of listings based on proximity to MRT
+
+#### Within 800m range
+
+```{r}
+listings_buffer_filter <- listings_buffer %>% 
+  filter(price < 1000)
+
+count_800_f <- 4513
+```
+
+
+```{r}
+summary(listings_buffer_filter$price)
+
+
+```
+
+```{r}
+describe(listings_buffer_filter$price)
+```
+
+```{r}
+mean_800 <- 151.2
+median_800 <- 126.0
+min_800 <-14
+max_800 <- 998
+skew_800 <- 2.26
+```
+
+
+```{r}
+listings_buffer_filter %>% 
+ggplot() +
+  geom_histogram(aes(x = price), binwidth = 10)
+```
+
+#### Outside 800m range
+
+```{r}
+listings_outside_buffer_filter <- listings_outside_buffer %>% 
+  filter(price < 1000)
+
+count_out_800_f <- 3148
+```
+
+
+```{r}
+summary(listings_outside_buffer_filter$price)
+```
+
+```{r}
+describe(listings_outside_buffer_filter$price)
+```
+
+```{r}
+mean_800_out <- 148.1
+median_800_out <- 120.0
+min_800_out <-14
+max_800_out <- 988
+skew_800_out <- 2.28
+```
+
+
+A quick glance at the descriptive statistics on the ```price``` variable shows us that the median is lower than the mean, and the skew is positive. This is unsurprising considering that the Airbnb hosts can generally choose how they want to price their listings. Furthermore, the dataset includes listings that are either entire home/apartments, private rooms, or hotel rooms, and within these types, are different types of houses such as bungalows, apartments, condominiums, which would affect the prices too. Since in the context of the law, where HDB flats are only allowed to be rented out for a period of six consecutive months, or 180 days, to non-tourists, while private homes have to fulfill a minimum rental length of three consecutive months or 90 days, it is safe to expect more of these listings to be private homes as it is easier to rent them out. This could explain the right skew.
+
+Visually, this is how it looks:
+
+```{r}
+listings_outside_buffer_filter %>% 
+ggplot() +
+  geom_histogram(aes(x = price), binwidth = 10)
+```
+
+
+#### Comparing prices
+
+Description | Within 800m | Outside 800m 
+-|-|-
+`n` | `r count_800` | `r count_out_800` 
+`n without outliers` | `r count_800_f ` | `r count_out_800_f` 
+`mean` | `r mean_800` | `r mean_800_out` 
+`median` | `r median_800` | `r median_800_out` 
+`min` | `r min_800` | `r min_800_out` 
+`max` | `r max_800` | `r max_800_out` 
+`skew` | `r skew_800` | `r skew_800_out` 
+
+
+As expected, there are more listings within 800m walking distance than outside, though the difference is not extremely huge. Mean prices of Airbnbs are slightly higher (by $3.10) for listings within the 800m buffer, but the prices are not significantly higher. Perhaps, beyond the 800m buffer, many listings are also served by buses.
+
+
+```{r}
+tm_shape(listings_sf) +
+  tm_dots(col = "price", size = 0.1, palette="YlGnBu", breaks=c(0,50,100,150,200,250,300,350,400,500,600,1000,10000)) + tm_shape(pln_region_poly) + tm_borders(col = "black", lwd = 1, lty = "solid") + tm_text("REGION_N", size = 0.8) + tm_layout(legend.outside = TRUE)
+```
+

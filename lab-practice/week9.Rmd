@@ -1,0 +1,215 @@
+---
+title: "week9"
+author: "Jeanette Choong"
+date: "3/26/2020"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(psych)
+```
+
+## 8.2 Partitional clustering
+
+To explore how to perform clustering analysis in R, we will yet again use our familiar dataset and initially just extract two factors using factor analysis (through the ```principal``` funciton from the ```psych``` package). As we can see in the resulting plot, we can distinguish a few groups of planning areas that seem more closely related to each other than to other planning areas in the country. Can we identify these groups in a more automatic fashion?
+
+```{r}
+planning_areas <- read_csv(here::here("data/planning_areas.csv"))
+
+fa <- planning_areas %>% 
+  column_to_rownames(var="planning_area") %>% 
+  select(starts_with("age"),
+         starts_with("occupation"),
+         starts_with("area"),
+         starts_with("dwelling"),
+         starts_with("hh")) %>% 
+  principal(nfactors=2, rotate="varimax") %>% 
+  pluck('scores') %>% 
+  unclass() %>% 
+  as_tibble(rownames="planning_area")
+
+fa %>% 
+  ggplot(aes(x=RC1, y=RC2))+ geom_text(aes(label=planning_area))
+```
+
+To do so, we can use a partitional technique called kmeans. Partitional techniques all follow the same steps:
+
+* The number of clusters is pre-assigned (by you, the researcher). We call this number of clusters k.
+* the goal is to divide our space into k clusters in a way that minimises a certain cost function. You are already familiar with cost functions: eg. in liner regression we are trying to minimize the difference between the estimated values and the observed values. 
+There are different cost functions you can use. The most popular cost function is the total within-cluster distance or squared error, which is referred to as k means. 
+
+How does the algorithm work?
+
+The algorithm starts out by distributing randomly k cluster centroids so that they are as far away from each other as possible.
+Each observation is assigned to the cluster centroid it is closest to.
+The cluster centroids are re-calculated.
+Observations are re-assigned to new clusters if they are now closer to a different centroid.
+Recalculate cluster centroids, and repeat process until a stable solution is reached.
+You can watch this process interactively on several websites. I find this simple approach by Karanveer Mohan quite elegant, as well as this interactive article by Naftali Harris.
+
+We can run k-means clustering in R through the built-in kmeans function. It takes two required arguments: the dataset to operate on and the number of cluster to identify. As the solution for k-means might depend on its initial starting points, we can run the algorithm multiple times and take the best solution - this is done by setting the nstart parameter. For now, let’s set the number of clusters to 4 and run the algorithm 50 times.
+
+```{r}
+cluster_data <- fa %>%  #remove planning_area column so we are left with only 'data'
+  column_to_rownames(var="planning_area")
+
+kmeans_clusters<- kmeans(cluster_data, centers=4, nstart=50)
+
+kmeans_clusters
+```
+Inspect the output of the clustering algorithm. We indeed find 4 clusters with 2, 6, 7, and 13 members respectively. We can visualize the clustering results with the fviz_cluster function from the factoextra package and change the size of the labels with option cex.
+
+```{r}
+library(factoextra)
+library(cluster)
+library(purrr)
+fviz_cluster(kmeans_clusters, data=cluster_data)
+```
+
+```{r}
+kmeans_clusters<- kmeans(cluster_data, centers=2, nstart=50)
+
+
+fviz_cluster(kmeans_clusters, data=cluster_data)
+```
+
+The previous exercise is a good illustration of picking the ‘right’ number of clusters. As you might have guessed, this again relates deeply to the bias-variance tradeoff we have seen in class.
+
+* With a small number of clusters, we have more bias. At one extreme, when we only pick one cluster, all observations are assigned to it. The model cannot discriminate between different groups, i.e., our model is too “simple”.
+
+* With a large number of clusters, we have more variance. At the other extreme, when we pick as many clusters as we have observations, each observation is its own cluster, which it doesn’t share with any other observation. The model is “too good” at discriminating, putting everyone in their own group: our model is too “complex”.
+
+We will see how to approach that in a later section but first we will try to use a different clustering technique altogether.
+
+## 8.3 Determining the optimal number of clusters
+
+So far, we have set the number of clusters ourselves. In many cases, you can have good theoretical or a-priori reason to set the number of clusters ahead of time. In other cases, you have no notion about the expected number of clusters yet. One of these techniques is called the ‘elbow’ method - similar to how we can decide how many factors to extract in PCA.
+
+As k-means clustering is trying to minimize a specific cost function (the total within-cluster squared error), we can simply iterate through all the potential number of clusters in our dataset and calculate this statistic. We can then look for the ‘bend’ point: the point where adding additional clusters doesn’t greatly add to minimizing our cost function anymore. As with any repeated operation, we will use purrr to automate the loop (specifically, the map_dbl function).
+
+```{r}
+library(dplyr)
+calculate_totwithinss <- function(k, data = cluster_data, nstart=50) {
+  kmeans(data, k, nstart) %>% 
+    pluck('tot.withinss')
+}
+
+optimal_k <- tibble(k=1:27, 
+                    totwithinss=map_dbl(1:27, calculate_totwithinss))
+
+ggplot(optimal_k, aes(x=k, y=totwithinss)) + geom_line()+ geom_point()
+```
+
+We can also do this with one of the convenience functions offered in the factoextra package. How many clusters would you pick based on this plot?
+
+```{r}
+fviz_nbclust(cluster_data, kmeans, method = "wss")
+```
+
+There are additional methods too. Average silhouette is another often-used approach. Conceptually, the silhouette is a measure reflecting how well an individual point fits within its cluster (this Stackoverflow answer provides a more detailed description). The average silhouette simply takes the average of the silhouettes of all points. Again, factoextra makes plotting this quite easy.
+
+```{r}
+fviz_nbclust(cluster_data, kmeans, method = "silhouette")
+```
+
+What number of clusters would you pick based on this method?
+
+Finally, there is also the gap statistic. This statistic is calculated based on a comparison of our cluster result with a null distribution that assumes no clustering. We will cover the conceptual logic behind this when we discuss spatial clustering next week so for now we will just look at what this metric indicates the best k would be (read the original paper by Tibshirani, Walther and Hastie (2000) if you’re interested). We need an additional library (cluster) to calculate this statistic.
+
+```{r}
+cluster::clusGap(cluster_data, FUN = kmeans, nstart = 50, K.max = 10, B = 50) %>% 
+  fviz_gap_stat()
+```
+
+## 8.4 Hierarchical Clustering (Week 10)
+
+```{r}
+hierarchical_clusters <- hclust(dist(cluster_data)) # hclust does algomerative clustering
+
+plot(hierarchical_clusters)
+```
+
+
+The resulting plot, called a dendogram, is a visual summary of all the steps of the agglomerative algorithm. Can you identify the two planning areas in Singapore that are most similar? We can use this structure to make ‘cuts’ at different parts depending on how many clusters we would like to identify. To extract 4 clusters:
+
+```{r}
+fviz_dend(hierarchical_clusters, k = 4, cex = 0.5) # visualize 4 clusters in the dendogram
+```
+
+```cutree``` separates the ```k``` clusters into ```k``` groups, then plotted using ```fviz_cluster```.
+
+```{r}
+hierarchical_clusters_k4 <- cutree(hierarchical_clusters, k = 4)
+fviz_cluster(list(data = cluster_data, cluster = hierarchical_clusters_k4))
+```
+
+```{r}
+hierarchical_clusters <- hcut(dist(cluster_data), k=4)
+fviz_dend(hierarchical_clusters_diana, k=4, cex=0.5)
+```
+
+diana method
+
+```{r}
+hierarchical_clusters_diana <- hcut(dist(cluster_data), hc_func="diana", k=4)
+fviz_dend(hierarchical_clusters_diana, k=4, cex=0.5)
+```
+
+```{r}
+
+```
+
+
+### 8.4.1 Exercise
+
+Try to re-run the same analysis with only 2 clusters again and compare the results to the k-means based outcome. Which method do you think is better?
+
+```{r}
+fviz_dend(hierarchical_clusters, k = 2, cex = 0.5) # visualize 4 clusters in the dendogram, cex controls the text size
+```
+
+
+```{r}
+hierarchical_clusters_k2 <- cutree(hierarchical_clusters, k = 2)
+fviz_cluster(list(data = cluster_data, cluster = hierarchical_clusters_k2))
+```
+
+## 8.5 Extension: Density-based clustering (DBSCAN)
+
+You have now seen two different approaches to clustering. There are many more clustering techniques available today. We will cover one more that is called DBSCAN. It is a density-based clustering algorithm, which works slightly different from the partion and hierarchical methods covered so far. The goal of such an algorithm is to cluster points together that are close to other (groups of) points. To do so, it uses two specific parameters. Again, these will need to be set by hand.
+
+First, is the minimum number of points that a cluster needs to have to be considered a cluster.
+Second, is the ‘epsilon’ or distance threshold within which points can be considered to be part of the same cluster.
+How does DBSCAN work?
+
+The algorithm starts at a random observation.
+It then looks around that point within the epsilon radius. If it finds more points than the minium number of points, it will mark all those points as belonging to the same cluster as the current point.
+It will then move on to the next point and repeat the procedure.
+Naftali Harris has made another good interactive exploration of the steps involved in this algorithm.
+
+There are a few advantages of this method. First, it is able to distinguish oddly shaped clusters (see for example the multishapes example in the factoextra package). This can be an important advantage but this highly depends on the meaning of your dimensions. In our example planning area dataset this isn’t necessarily a good thing. Second, it will not assign all points to a cluster per se but can also identify outliers that do not belong to any cluster.
+
+You might wonder how do we determine the minimum number of points and the epsilon parameters? This can come from some meaningful theoretical basis or can be determined by looking at the k-nearest neighbor distances. We are looking - again! - for an elbow or knee in this plot.
+
+```{r}
+library(dbscan)
+kNNdistplot(cluster_data, k=3) # k = number of neighbours in the dbscan algo, not clusters
+abline(h=0.7, col = "red", lty=2)
+```
+
+
+from each point above, e.g. amk, we find which is the closest to that point. 
+
+
+Based on this plot, an epsilon of 0.55 might be a reasonal starting point. Let's use it to run the ```dbscan``` algorithm. 
+
+```{r}
+dbscan(cluster_data, eps = 0.7, minPts = 5) %>% 
+  fviz_cluster(data = cluster_data)
+```
+
+### 8.5.1 Exercise
+
+Can you interpret the results and compare with the result of the kmeans algorithm? To get a better sense of the importance of setting the ‘right’ epsilon, try to increase and decrease it in steps of 0.05.

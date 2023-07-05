@@ -1,0 +1,110 @@
+---
+title: "Week 3"
+author: "Jeanette Choong"
+date: "2/9/2020"
+output: github_document
+editor_options: 
+  chunk_output_type: inline
+---
+```{r}
+library(tidyverse)
+library(here)
+```
+
+```{r}
+sales <- readRDS(here::here("data/sales.rds"))
+```
+
+```{r}
+# create own mode function because it doesn't exist in R
+# from https://stackoverflow.com/a/25635740
+
+manual_mode <- function(x, na.rm = FALSE) { # we don't use 'mode' as a function name because it already exists
+  if(na.rm) {
+    x = x[!is.na(x)]
+  } 
+  
+  ux <- unique(x)
+  return(ux[which.max(tabulate(match(x,ux)))])
+  }
+```
+
+```{r}
+mean(sales$floor_area_sqm)
+```
+
+```{r}
+median(sales$floor_area_sqm)
+```
+
+```{r}
+manual_mode(sales$floor_area_sqm)
+```
+
+```{r}
+# Range
+max(sales$floor_area_sqm)
+
+# Interquartile Range
+IQR(sales$floor_area_sqm)
+
+# Standard Deviation
+sd(sales$floor_area_sqm)
+
+# Coefficient of variation
+sd(sales$floor_area_sqm) / mean(sales$floor_area_sqm)
+
+library(e1071)
+
+# Kurtosis and Skewness from the 'e1071' library
+kurtosis(sales$floor_area_sqm)
+skewness(sales$floor_area_sqm)
+```
+
+```{r}
+summary(sales$floor_area_sqm)
+```
+
+```{r}
+library(skimr)
+skim(sales$floor_area_sqm)
+```
+
+```{r}
+ggplot(sales, aes(x = floor_area_sqm)) + geom_histogram(binwidth = 5)
+```
+
+```{r}
+ggplot(sales, aes(x = floor_area_sqm))+ geom_histogram(aes(y = ..density..), binwidth = 5) + stat_function(fun = dnorm, args = list(mean = mean(sales$floor_area_sqm), sd = sd(sales$floor_area_sqm)))
+```
+
+```{r}
+sales %>% 
+  filter(floor_area_sqm == "67") %>% 
+  view()
+```
+# Can you think of specific contextual reasons why there might be so many flats with 66-70 sq meters of floor area?
+
+```{r}
+# boxplot: a visual summary of the mean, IQR and outliers.
+ggplot(sales, aes(x = 1, y = floor_area_sqm)) + geom_boxplot()
+```
+
+```{r}
+ggplot(sales, aes(x = 1, y = floor_area_sqm)) + 
+  geom_violin()
+
+# Visualizations are particularly useful to explore distributions within subgroups. 
+```
+
+```{r}
+ggplot(sales, aes(x = floor_area_sqm)) + 
+  geom_histogram(binwidth = 10) +
+  facet_wrap(~ flat_type, scales = "free_y")
+```
+
+```{r}
+ggplot(sales, aes(x = flat_type, y = floor_area_sqm)) + 
+  geom_violin()
+```
+

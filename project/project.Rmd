@@ -1,0 +1,166 @@
+---
+title: "Project EDA"
+author: "Jeanette Choong"
+date: "3/30/2020"
+output: github_document
+
+---
+
+Research Question: Why are there still so many Airbnb listings despite the short-term accommodation laws in Singapore?
+
+Hypotheses of the study:
+1. Many home owners may be flouting the rules.
+2. The Airbnb market in Singapore targets Singaporeans, permanent residents, and long-term stayers with appropriate passes.
+3. Most listings would be located in neighbourhoods where there are fewer HDB flats as it is more challenging for owners to meet the 180-day minimum stay. 
+  
+Some guiding questions include:
+1. How risky is it for a tourist to stay in an Airbnb accommodation?
+2. Which listings are likely violating the laws on short-term rentals in Singapore?
+3. How much does it cost to rent a place from Airbnb in Singapore?
+4. Where are most listings located at?
+5. How does the availability vary with the type of listing?
+
+## Preliminaries 
+
+```{r message = FALSE}
+library(tidyverse)
+library(here)
+library(httr)
+library(mapedit)
+library(mapview)
+library(sf)
+library(skimr)
+library(lubridate)
+library(forcats)
+library(tmap)
+library(psych)
+library(shiny)
+```
+
+```{r}
+knitr::opts_chunk$set(dpi = 200)
+```
+
+
+```{r}
+listings <- read_csv(here::here("projdata/listings-mar20.csv"))
+```
+
+
+## 1. Clean Data
+
+```{r}
+listings <- listings %>% 
+  select(id, name, listing_url, description, host_id, host_name, host_since, host_response_time, host_response_rate, host_acceptance_rate, host_is_superhost, host_listings_count, property_type, room_type, price, minimum_nights, neighbourhood_cleansed, neighbourhood_group_cleansed, latitude, longitude, number_of_reviews, number_of_reviews_ltm, review_scores_rating, reviews_per_month)
+
+
+listings <- rename(listings, planning_area = neighbourhood_cleansed, planning_region= neighbourhood_group_cleansed)
+```
+
+
+## 2. Number of listings over time
+
+Data for Airbnb listings in Singapore is only available as far back as March 2019. Based on monthly listings data, we can see that the number of listings remained relatively stable, with minor seasonal "peaks" in the months of May, June and December, which are usually holiday season. 
+
+```{r}
+# values based on number of observations from previous months' listings
+listings_time <- tribble(
+  ~month, ~total_listings,
+  "mar20", 7713,
+  "feb20", 8047,
+  "jan20", 7857,
+  "dec19", 8000,
+  "nov19", 7857,
+  "oct19", 7794,
+  "sep19", 7675,
+  "aug19", 7907,
+  "jul19", 8033,
+  "jun19", 8293,
+  "may19", 8325,
+  "apr19", 8090,
+  "mar19", 7975
+)
+
+month_order <- c(
+  "mar19", "apr19", "may19", "jun19", "jul19", "aug19", "sep19", "oct19", "nov19",
+  "dec19", "jan20", "feb20", "mar20"
+)
+
+listings_time %>%
+  mutate(month = ordered(month, levels = month_order)) %>%
+  ggplot(aes(x = month, y = total_listings)) + geom_col(color = "grey", fill = "paleturquoise3") + geom_text(aes(label = total_listings), vjust = -0.5, size = 3) + labs(y = "Total listings")
+```
+
+## 3. Exploratory Analysis of variables
+
+```{r}
+listings %>% head()
+```
+
+```{r}
+listings <- listings %>% 
+  mutate(property_type = as_factor(property_type), 
+         room_type = as_factor(room_type), 
+         price= as.numeric(gsub("[\\$]", "", price)))
+
+listings
+
+```
+
+### 3.1 ```price```
+```{r}
+summary(listings$price)
+```
+
+```{r}
+describe(listings$price)
+```
+
+A quick overview of the ```price``` variable shows that the median is below the mean, and the data is positively skewed. This is unsurprising since the Airbnb prices are pretty much market-regulated. Furthermore, given the laws on short-term accommodations in Singapore, it is expected that most of the listings would be private homes and the distribution of prices would therefore be skewed to the right. 
+
+Visually, this would look like this:
+
+```{r}
+ggplot(listings, aes(x=price)) + 
+  geom_histogram(aes(y=..density..), binwidth = 10) +theme_minimal()
+```
+
+
+### 3.2 ```host_listings_count```
+
+```{r}
+summary(listings$host_listings_count)
+```
+
+```{r}
+describe(listings$host_listings_count)
+```
+
+
+
+
+```{r}
+listings %>% 
+  arrange(-host_listings_count) %>% 
+  head() %>% 
+select(host_name, host_listings_count)
+```
+Initial browsing of the data gave me a hint that the Airbnb Singapore allows full-fledged rental businesses to operate using their platform, as some hosts have very a very high number of listings, uncharacteristic of an individual home owner. 
+
+For example, the host Jay has the most listings, a total of 403, and the mean number of listings is about 50, which is indicative of the fact that most Airbnb hosts in Singapore are not individual homeowners, whom Airbnb set out for the platform to be targeted at. 
+
+### 3.3 ```property_type```
+
+```{r}
+listings %>% 
+   mutate(property_type = recode(property_type, 'Heritage hotel (India)' = "Hotel", 'Boutique hotel' = "Hotel", 'Bus' = "Apartment", 'Cabin' = "Hotel", 'Earth house' = "Apartment", 'Tiny house' = "Hotel", 'Aparthotel' = "Hotel")) %>%
+  mutate(case_when((str_detect(name, "hotel"))))
+count(property_type) %>% 
+  arrange(n) %>% 
+  mutate(property_type = fct_relevel(property_type, sort(levels(property_type)))) %>% 
+  ggplot()+ 
+  geom_col(aes(x=property_type, y=n))+ coord_flip() + theme_light()
+```
+
+
+// STOPPED HERE BECAUSE DATA NEEDS MORE CLEANING ON THE PROPERTY TYPE

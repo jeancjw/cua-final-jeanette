@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>6 Spatial Clustering | Exploring the Airbnb Market in Singapore</title>
+  <meta name="description" content="6 Spatial Clustering | Exploring the Airbnb Market in Singapore" />
+  <meta name="generator" content="bookdown 0.18 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="6 Spatial Clustering | Exploring the Airbnb Market in Singapore" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="6 Spatial Clustering | Exploring the Airbnb Market in Singapore" />
+  
+  
+  
+
+<meta name="author" content="Jeanette Choong" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="principal-component-analysis-pca.html"/>
+<link rel="next" href="spatial-autocorrelation.html"/>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<script src="libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/Proj4Leaflet-1.0.1/proj4-compressed.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.0.3/leaflet.js"></script>
+<script src="libs/leaflet-providers-1.9.0/leaflet-providers_1.9.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.0.3/leaflet-providers-plugin.js"></script>
+<link href="libs/HomeButton-0.0.1/home-button.css" rel="stylesheet" />
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/PopupTable-0.0.1/popup.css" rel="stylesheet" />
+
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Exploring Airbnbs in Singapore</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Project Summary</a></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a><ul>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#research-questions-hypotheses"><i class="fa fa-check"></i><b>2.1</b> Research Questions &amp; Hypotheses</a></li>
+<li class="chapter" data-level="2.2" data-path="introduction.html"><a href="introduction.html#research-approach"><i class="fa fa-check"></i><b>2.2</b> Research Approach</a></li>
+<li class="chapter" data-level="2.3" data-path="introduction.html"><a href="introduction.html#other-methods"><i class="fa fa-check"></i><b>2.3</b> Other methods</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html"><i class="fa fa-check"></i><b>3</b> Exploratory Data Analysis</a><ul>
+<li class="chapter" data-level="3.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#setting-up-the-data"><i class="fa fa-check"></i><b>3.1</b> Setting up the data</a></li>
+<li class="chapter" data-level="3.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#popularity-of-airbnbs"><i class="fa fa-check"></i><b>3.2</b> Popularity of Airbnbs</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#number-of-listings-over-time"><i class="fa fa-check"></i><b>3.2.1</b> Number of listings over time</a></li>
+<li class="chapter" data-level="3.2.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#number-of-reviews-over-time"><i class="fa fa-check"></i><b>3.2.2</b> Number of Reviews over time</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#analysis-of-different-variables"><i class="fa fa-check"></i><b>3.3</b> Analysis of different variables</a><ul>
+<li class="chapter" data-level="3.3.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#price"><i class="fa fa-check"></i><b>3.3.1</b> <code>price</code></a></li>
+<li class="chapter" data-level="3.3.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#host_listings_count"><i class="fa fa-check"></i><b>3.3.2</b> <code>host_listings_count</code></a></li>
+<li class="chapter" data-level="3.3.3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#property_type"><i class="fa fa-check"></i><b>3.3.3</b> <code>property_type</code></a></li>
+<li class="chapter" data-level="3.3.4" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#room_type"><i class="fa fa-check"></i><b>3.3.4</b> <code>room_type</code></a></li>
+<li class="chapter" data-level="3.3.5" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#reviews_per_month"><i class="fa fa-check"></i><b>3.3.5</b> <code>reviews_per_month</code></a></li>
+<li class="chapter" data-level="3.3.6" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#minimum_nights"><i class="fa fa-check"></i><b>3.3.6</b> <code>minimum_nights</code></a></li>
+<li class="chapter" data-level="3.3.7" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#planning_region"><i class="fa fa-check"></i><b>3.3.7</b> <code>planning_region</code></a></li>
+<li class="chapter" data-level="3.3.8" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#planning_area"><i class="fa fa-check"></i><b>3.3.8</b> <code>planning_area</code></a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html"><i class="fa fa-check"></i><b>4</b> Visualising spatial distribution of Listings</a><ul>
+<li class="chapter" data-level="4.1" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-planning-region"><i class="fa fa-check"></i><b>4.1</b> By planning region</a></li>
+<li class="chapter" data-level="4.2" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-property-type"><i class="fa fa-check"></i><b>4.2</b> By property type</a></li>
+<li class="chapter" data-level="4.3" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-minimum-length-of-stay"><i class="fa fa-check"></i><b>4.3</b> By minimum length of stay</a></li>
+<li class="chapter" data-level="4.4" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-proximity-to-mrt-stations"><i class="fa fa-check"></i><b>4.4</b> By proximity to MRT stations</a><ul>
+<li class="chapter" data-level="4.4.1" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#load-mrt-data"><i class="fa fa-check"></i><b>4.4.1</b> Load MRT data</a></li>
+<li class="chapter" data-level="4.4.2" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#assessing-prices-of-listings-based-on-proximity-to-mrt"><i class="fa fa-check"></i><b>4.4.2</b> Assessing prices of listings based on proximity to MRT</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html"><i class="fa fa-check"></i><b>5</b> Principal Component Analysis (PCA)</a><ul>
+<li class="chapter" data-level="5.1" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html#extract-components-scale-data"><i class="fa fa-check"></i><b>5.1</b> Extract components &amp; scale data</a></li>
+<li class="chapter" data-level="5.2" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html#pca-using-varimax"><i class="fa fa-check"></i><b>5.2</b> PCA using varimax</a></li>
+<li class="chapter" data-level="5.3" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html#reflections-on-pca"><i class="fa fa-check"></i><b>5.3</b> Reflections on PCA</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="spatial-clustering.html"><a href="spatial-clustering.html"><i class="fa fa-check"></i><b>6</b> Spatial Clustering</a><ul>
+<li class="chapter" data-level="6.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#aggregation-to-larger-spatial-units"><i class="fa fa-check"></i><b>6.1</b> Aggregation to larger spatial units</a></li>
+<li class="chapter" data-level="6.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-of-minimum_nights-variable"><i class="fa fa-check"></i><b>6.2</b> Clustering of <code>minimum_nights</code> variable</a><ul>
+<li class="chapter" data-level="6.2.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#building-the-minimum-spanning-tree"><i class="fa fa-check"></i><b>6.2.1</b> Building the Minimum Spanning Tree</a></li>
+<li class="chapter" data-level="6.2.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-with-skater"><i class="fa fa-check"></i><b>6.2.2</b> Clustering with SKATER</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-of-price-variable"><i class="fa fa-check"></i><b>6.3</b> Clustering of <code>price</code> variable</a><ul>
+<li class="chapter" data-level="6.3.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#building-the-minimum-spanning-tree-1"><i class="fa fa-check"></i><b>6.3.1</b> Building the Minimum Spanning Tree</a></li>
+<li class="chapter" data-level="6.3.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-with-skater-1"><i class="fa fa-check"></i><b>6.3.2</b> Clustering with SKATER</a></li>
+</ul></li>
+<li class="chapter" data-level="6.4" data-path="spatial-clustering.html"><a href="spatial-clustering.html#reflection-on-spatial-clustering"><i class="fa fa-check"></i><b>6.4</b> Reflection on Spatial Clustering</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html"><i class="fa fa-check"></i><b>7</b> Spatial Autocorrelation</a><ul>
+<li class="chapter" data-level="7.1" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html#morans-i"><i class="fa fa-check"></i><b>7.1</b> Moran’s I</a></li>
+<li class="chapter" data-level="7.2" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html#local-value-of-autocorrelation"><i class="fa fa-check"></i><b>7.2</b> Local value of autocorrelation</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="spatial-regression.html"><a href="spatial-regression.html"><i class="fa fa-check"></i><b>8</b> Spatial Regression</a><ul>
+<li class="chapter" data-level="8.1" data-path="spatial-regression.html"><a href="spatial-regression.html#setting-up-the-regression"><i class="fa fa-check"></i><b>8.1</b> Setting up the regression</a></li>
+<li class="chapter" data-level="8.2" data-path="spatial-regression.html"><a href="spatial-regression.html#reflection-on-spatial-autocorrelationregression-method"><i class="fa fa-check"></i><b>8.2</b> Reflection on Spatial Autocorrelation/Regression Method</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="concluding-thoughts.html"><a href="concluding-thoughts.html"><i class="fa fa-check"></i><b>9</b> Concluding thoughts</a></li>
+<li class="chapter" data-level="10" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>10</b> References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Exploring the Airbnb Market in Singapore</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="spatial-clustering" class="section level1">
+<h1><span class="header-section-number">6</span> Spatial Clustering</h1>
+<div class="sourceCode" id="cb162"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb162-1" data-line-number="1"><span class="kw">library</span>(tidyverse)</a>
+<a class="sourceLine" id="cb162-2" data-line-number="2"><span class="kw">library</span>(dplyr)</a>
+<a class="sourceLine" id="cb162-3" data-line-number="3"><span class="kw">library</span>(here)</a>
+<a class="sourceLine" id="cb162-4" data-line-number="4"><span class="kw">library</span>(sf)</a>
+<a class="sourceLine" id="cb162-5" data-line-number="5"><span class="kw">library</span>(tmap)</a>
+<a class="sourceLine" id="cb162-6" data-line-number="6"><span class="kw">library</span>(psych)</a></code></pre></div>
+<div class="sourceCode" id="cb163"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb163-1" data-line-number="1">listings &lt;-<span class="st"> </span><span class="kw">readRDS</span>(here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/listings.rds&quot;</span>))</a></code></pre></div>
+<div id="aggregation-to-larger-spatial-units" class="section level2">
+<h2><span class="header-section-number">6.1</span> Aggregation to larger spatial units</h2>
+<p>To analyse the data spatially, I will be aggregating Singapore’s planning area data with the airbnb dataset.</p>
+<div class="sourceCode" id="cb164"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb164-1" data-line-number="1">planning_areas &lt;-<span class="st"> </span><span class="kw">st_read</span>(here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/MP14_PLNG_AREA_NO_SEA_PL.shp&quot;</span>)) <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb164-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(<span class="op">!</span>(OBJECTID <span class="op">==</span><span class="st"> </span><span class="dv">49</span> <span class="op">|</span><span class="st"> </span>OBJECTID <span class="op">==</span><span class="st"> </span><span class="dv">18</span>)) <span class="co"># remove islands</span></a></code></pre></div>
+<pre><code>## Reading layer `MP14_PLNG_AREA_NO_SEA_PL&#39; from data source `/Users/jeancjw/Documents/SUTD/MUSPP/02.522 Urban Data &amp; Methods II CUA/cua-jeanette-c/projdata/MP14_PLNG_AREA_NO_SEA_PL.shp&#39; using driver `ESRI Shapefile&#39;
+## Simple feature collection with 55 features and 12 fields
+## geometry type:  MULTIPOLYGON
+## dimension:      XY
+## bbox:           xmin: 2667.538 ymin: 15748.72 xmax: 56396.44 ymax: 50256.33
+## epsg (SRID):    NA
+## proj4string:    +proj=tmerc +lat_0=1.366666666666667 +lon_0=103.8333333333333 +k=1 +x_0=28001.642 +y_0=38744.572 +datum=WGS84 +units=m +no_defs</code></pre>
+<div class="sourceCode" id="cb166"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb166-1" data-line-number="1">listings_sf &lt;-<span class="st"> </span><span class="kw">st_as_sf</span>(listings, <span class="dt">coords =</span> <span class="kw">c</span>(<span class="st">&quot;longitude&quot;</span>, <span class="st">&quot;latitude&quot;</span>)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb166-2" data-line-number="2"><span class="st">  </span><span class="kw">st_set_crs</span>(<span class="st">&quot;+proj=longlat +datum=WGS84&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># projection we start from</span></a>
+<a class="sourceLine" id="cb166-3" data-line-number="3"><span class="st">  </span><span class="kw">st_transform</span>(planning_areas <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">st_crs</span>()) <span class="co"># projection we want to get to</span></a></code></pre></div>
+<div class="sourceCode" id="cb167"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb167-1" data-line-number="1"><span class="kw">saveRDS</span>(listings_sf, here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/listings_sf.rds&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb168"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb168-1" data-line-number="1">listings_sf &lt;-<span class="st"> </span>listings_sf <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb168-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(host_id <span class="op">!=</span><span class="st"> &quot;122991242&quot;</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb168-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(host_id <span class="op">!=</span><span class="st"> &quot;32502212&quot;</span>)</a></code></pre></div>
+<p>Two listings in the west were removed as they could not be connected to build the minimum spanning tree.</p>
+<div class="sourceCode" id="cb169"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb169-1" data-line-number="1">hex_grid &lt;-<span class="st"> </span>planning_areas <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb169-2" data-line-number="2"><span class="st">  </span><span class="kw">st_make_grid</span>(<span class="kw">st_bbox</span>(.), <span class="dt">square =</span> <span class="ot">FALSE</span>, <span class="dt">cellsize =</span> <span class="dv">1500</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># setting the sq to false means hex, and each hex is 1500m in size</span></a>
+<a class="sourceLine" id="cb169-3" data-line-number="3"><span class="st">  </span><span class="kw">st_sf</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb169-4" data-line-number="4"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">hex_id =</span> <span class="kw">row_number</span>())</a>
+<a class="sourceLine" id="cb169-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb169-6" data-line-number="6"><span class="kw">tm_shape</span>(hex_grid) <span class="op">+</span><span class="st"> </span><span class="kw">tm_polygons</span>()</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-95-1.png" width="1400" /></p>
+<div class="sourceCode" id="cb170"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb170-1" data-line-number="1">listings_hex &lt;-<span class="st"> </span><span class="kw">st_join</span>(listings_sf, hex_grid) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb170-2" data-line-number="2"><span class="st">  </span><span class="kw">st_set_geometry</span>(<span class="ot">NULL</span>)</a></code></pre></div>
+</div>
+<div id="clustering-of-minimum_nights-variable" class="section level2">
+<h2><span class="header-section-number">6.2</span> Clustering of <code>minimum_nights</code> variable</h2>
+<p>Referring to the plot below, we can see that plotting the entire range of <code>minimum_nights</code> returns a plot that can shows that there is not much spatial clustering going on. It only shows us that majority of the listings across Singapore are likely to be flouting the rules as the average minimum length of stay is between 0-100 days. This is also what was seen in the previous section.</p>
+<div class="sourceCode" id="cb171"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb171-1" data-line-number="1">min_nights &lt;-<span class="st"> </span>listings_hex <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb171-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(hex_id) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb171-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">min_nights =</span> <span class="kw">mean</span>(minimum_nights)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb171-4" data-line-number="4"><span class="st">  </span><span class="kw">left_join</span>(hex_grid, .) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb171-5" data-line-number="5"><span class="st">  </span><span class="kw">filter</span>(min_nights <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span> )</a></code></pre></div>
+<pre><code>## Joining, by = &quot;hex_id&quot;</code></pre>
+<div class="sourceCode" id="cb173"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb173-1" data-line-number="1"><span class="kw">tm_shape</span>(min_nights) <span class="op">+</span><span class="st"> </span><span class="kw">tm_fill</span>(<span class="dt">col =</span> <span class="st">&quot;min_nights&quot;</span>,  <span class="dt">breaks=</span><span class="kw">c</span>(<span class="dv">0</span>,<span class="dv">30</span>,<span class="dv">60</span>,<span class="dv">90</span>,<span class="dv">120</span>,<span class="dv">150</span>,<span class="dv">180</span>,<span class="dv">210</span>,<span class="dv">240</span>,<span class="dv">270</span>,<span class="dv">300</span>,<span class="dv">330</span>, <span class="dv">360</span>,<span class="dv">390</span>,<span class="dv">420</span>,<span class="dv">450</span>,<span class="dv">480</span>,<span class="dv">510</span>,<span class="dv">540</span>,<span class="dv">570</span>, <span class="dv">600</span>), <span class="dt">palette =</span> <span class="st">&quot;YlOrRd&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">tm_borders</span>()</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-97-1.png" width="1400" /></p>
+<p>However, if the listing is a HDB flat, a better indicator would be a length of stay requirement that is below 180 days. While we cannot acertain from the clustering which listings are HDB flats, we can make an educated guess based on which areas are usually where HDB estates are located. Furthermore, it could also be the case where an owner only rents their home out through airbnb for the minimum length stated, and then extends the rental beyond that without going through the platform. Hence it would be interesting to look at finer-grain detail of the average minimum length of stay by setting the plot to display a maximum of 179 nights.</p>
+<div class="sourceCode" id="cb174"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb174-1" data-line-number="1">min_nights_<span class="dv">180</span> &lt;-<span class="st"> </span>listings_hex <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb174-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(hex_id) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb174-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">min_nights =</span> <span class="kw">mean</span>(minimum_nights)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb174-4" data-line-number="4"><span class="st">  </span><span class="kw">left_join</span>(hex_grid, .) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb174-5" data-line-number="5"><span class="st">  </span><span class="kw">filter</span>(min_nights <span class="op">&lt;</span><span class="st"> </span><span class="dv">180</span>)</a></code></pre></div>
+<pre><code>## Joining, by = &quot;hex_id&quot;</code></pre>
+<div class="sourceCode" id="cb176"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb176-1" data-line-number="1"><span class="kw">tmap_mode</span>(<span class="st">&quot;plot&quot;</span>)</a></code></pre></div>
+<pre><code>## tmap mode set to plotting</code></pre>
+<div class="sourceCode" id="cb178"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb178-1" data-line-number="1"><span class="kw">tm_shape</span>(min_nights_<span class="dv">180</span>) <span class="op">+</span><span class="st"> </span><span class="kw">tm_polygons</span>(<span class="dt">col =</span> <span class="st">&quot;min_nights&quot;</span>, <span class="dt">palette =</span> <span class="st">&quot;YlOrRd&quot;</span>, <span class="dt">alpha=</span><span class="fl">0.7</span>)</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-98-1.png" width="1400" /></p>
+<p>A large majority of areas still have listings that require an average minimum length of stay of 0-40 nights, and those that require at least longer length of stays are at the peripherals and away from the city centre. In fact, the city centre consists only of shorter-term stays up to a maximum of 60 days. This is not surprising because given the context of Singapore, the Central area is known to be where the more expensive neighbourhoods are, and where there are more private estates. The planning areas in the periphery with higher requirements for the minimum length of stay seem to be where HDB estates are. By zooming into these areas, we can see that many of them are indeed around HDB estates. Therefore, it seems that the number listings that are possibly flouting the rules are more than what was previously estimated when only those withi minimum length of stay below 90 days were taken into account.</p>
+<div id="building-the-minimum-spanning-tree" class="section level3">
+<h3><span class="header-section-number">6.2.1</span> Building the Minimum Spanning Tree</h3>
+<div class="sourceCode" id="cb179"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb179-1" data-line-number="1"><span class="kw">library</span>(spdep)</a></code></pre></div>
+<pre><code>## Loading required package: sp</code></pre>
+<pre><code>## Loading required package: spData</code></pre>
+<pre><code>## To access larger datasets in this package, install the spDataLarge
+## package with: `install.packages(&#39;spDataLarge&#39;,
+## repos=&#39;https://nowosad.github.io/drat/&#39;, type=&#39;source&#39;)`</code></pre>
+<div class="sourceCode" id="cb183"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb183-1" data-line-number="1">hex_sp_nights &lt;-<span class="st"> </span><span class="kw">as</span>(min_nights_<span class="dv">180</span>, <span class="st">&quot;Spatial&quot;</span>)</a>
+<a class="sourceLine" id="cb183-2" data-line-number="2">hex_neighbours_nights &lt;-<span class="st"> </span><span class="kw">poly2nb</span>(hex_sp_nights)</a>
+<a class="sourceLine" id="cb183-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb183-4" data-line-number="4"><span class="co"># visually inspect neighbours</span></a>
+<a class="sourceLine" id="cb183-5" data-line-number="5"><span class="kw">plot</span>(hex_neighbours_nights, <span class="kw">coordinates</span>(hex_sp_nights))</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-99-1.png" width="1400" /></p>
+<div class="sourceCode" id="cb184"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb184-1" data-line-number="1">cluster_data_nights &lt;-<span class="st"> </span>min_nights_<span class="dv">180</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb184-2" data-line-number="2"><span class="st">  </span><span class="kw">st_set_geometry</span>(<span class="ot">NULL</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb184-3" data-line-number="3"><span class="st">  </span><span class="kw">select</span>(min_nights)</a></code></pre></div>
+<div class="sourceCode" id="cb185"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb185-1" data-line-number="1">hex_edge_costs_nights &lt;-<span class="st"> </span><span class="kw">nbcosts</span>(hex_neighbours_nights, cluster_data_nights)</a>
+<a class="sourceLine" id="cb185-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb185-3" data-line-number="3">hex_edge_weights_nights &lt;-<span class="st"> </span><span class="kw">nb2listw</span>(hex_neighbours_nights, hex_edge_costs_nights, <span class="dt">style =</span> <span class="st">&quot;B&quot;</span>)</a>
+<a class="sourceLine" id="cb185-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb185-5" data-line-number="5">hex_mst_nights &lt;-<span class="st"> </span><span class="kw">mstree</span>(hex_edge_weights_nights)</a>
+<a class="sourceLine" id="cb185-6" data-line-number="6"><span class="kw">plot</span>(hex_mst_nights, <span class="kw">coordinates</span>(hex_sp_nights))</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-101-1.png" width="1400" /></p>
+</div>
+<div id="clustering-with-skater" class="section level3">
+<h3><span class="header-section-number">6.2.2</span> Clustering with SKATER</h3>
+<div class="sourceCode" id="cb186"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb186-1" data-line-number="1"><span class="co"># deciding the number of clusters</span></a>
+<a class="sourceLine" id="cb186-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb186-3" data-line-number="3">hex_skater_elbow &lt;-<span class="st"> </span><span class="kw">skater</span>(hex_mst_nights[, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>],</a>
+<a class="sourceLine" id="cb186-4" data-line-number="4">  cluster_data_nights,</a>
+<a class="sourceLine" id="cb186-5" data-line-number="5">  <span class="dt">ncuts =</span> <span class="dv">40</span></a>
+<a class="sourceLine" id="cb186-6" data-line-number="6">)</a>
+<a class="sourceLine" id="cb186-7" data-line-number="7"><span class="kw">tibble</span>(</a>
+<a class="sourceLine" id="cb186-8" data-line-number="8">  <span class="dt">x =</span> <span class="dv">0</span><span class="op">:</span><span class="dv">40</span>,</a>
+<a class="sourceLine" id="cb186-9" data-line-number="9">  <span class="dt">y =</span> hex_skater_elbow<span class="op">$</span>ssw</a>
+<a class="sourceLine" id="cb186-10" data-line-number="10">) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb186-11" data-line-number="11"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb186-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb186-13" data-line-number="13"><span class="st">  </span><span class="kw">ylim</span>(<span class="dv">0</span>, <span class="kw">max</span>(hex_skater_elbow<span class="op">$</span>ssw)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb186-14" data-line-number="14"><span class="st">  </span><span class="kw">geom_vline</span>(<span class="dt">xintercept =</span> <span class="dv">3</span>, <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb186-15" data-line-number="15"><span class="st">  </span><span class="kw">geom_vline</span>(<span class="dt">xintercept =</span> <span class="dv">15</span>, <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb186-16" data-line-number="16"><span class="st">  </span><span class="kw">theme_light</span>()</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-102-1.png" width="1400" /></p>
+<p>Here the elbow plot is not very clear of what the appropriate number of clusters is. It seems to be between 3-15, which is quite a wide range.</p>
+<p>I will start by creating 3 clusters.</p>
+<div class="sourceCode" id="cb187"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb187-1" data-line-number="1">hex_skater_k3 &lt;-<span class="st"> </span><span class="kw">skater</span>(hex_mst_nights[, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>],</a>
+<a class="sourceLine" id="cb187-2" data-line-number="2">  cluster_data_nights,</a>
+<a class="sourceLine" id="cb187-3" data-line-number="3">  <span class="dt">ncuts =</span> <span class="dv">2</span>,</a>
+<a class="sourceLine" id="cb187-4" data-line-number="4">  <span class="dt">crit=</span><span class="dv">15</span>)</a>
+<a class="sourceLine" id="cb187-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb187-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb187-7" data-line-number="7">min_nights_<span class="dv">180</span><span class="op">$</span>cluster &lt;-<span class="st"> </span><span class="kw">as.character</span>(hex_skater_k3<span class="op">$</span>groups)</a>
+<a class="sourceLine" id="cb187-8" data-line-number="8"><span class="kw">tm_shape</span>(min_nights_<span class="dv">180</span>) <span class="op">+</span><span class="st"> </span><span class="kw">tm_polygons</span>(<span class="dt">col =</span> <span class="st">&quot;cluster&quot;</span>) </a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-103-1.png" width="1400" /></p>
+<p>With three clusters made up of a minimum of 15 hexagons, the plot generalises the clusters too much.</p>
+<div class="sourceCode" id="cb188"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb188-1" data-line-number="1">hex_skater_k15 &lt;-<span class="st"> </span><span class="kw">skater</span>(hex_mst_nights[, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>],</a>
+<a class="sourceLine" id="cb188-2" data-line-number="2">  cluster_data_nights,</a>
+<a class="sourceLine" id="cb188-3" data-line-number="3">  <span class="dt">ncuts =</span> <span class="dv">14</span>, </a>
+<a class="sourceLine" id="cb188-4" data-line-number="4">  <span class="dt">crit=</span><span class="dv">6</span>)</a>
+<a class="sourceLine" id="cb188-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb188-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb188-7" data-line-number="7">min_nights_<span class="dv">180</span><span class="op">$</span>cluster &lt;-<span class="st"> </span><span class="kw">as.character</span>(hex_skater_k15<span class="op">$</span>groups)</a>
+<a class="sourceLine" id="cb188-8" data-line-number="8"><span class="kw">tm_shape</span>(min_nights_<span class="dv">180</span>) <span class="op">+</span><span class="st"> </span><span class="kw">tm_polygons</span>(<span class="dt">col =</span> <span class="st">&quot;cluster&quot;</span>) </a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-104-1.png" width="1400" /></p>
+<p>The clusters become more defined when increased to 15, but to avoid single-hexagon clusters, which may not be helpful, the minimum number of of hexagons in each cluster was set to 6. Despite so, there are too many clusters, and it is not helpful for our understanding of the average minimum length of stay.</p>
+<div class="sourceCode" id="cb189"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb189-1" data-line-number="1">hex_skater_k10 &lt;-<span class="st"> </span><span class="kw">skater</span>(hex_mst_nights[, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>],</a>
+<a class="sourceLine" id="cb189-2" data-line-number="2">  cluster_data_nights,</a>
+<a class="sourceLine" id="cb189-3" data-line-number="3">  <span class="dt">ncuts =</span> <span class="dv">9</span>, </a>
+<a class="sourceLine" id="cb189-4" data-line-number="4">  <span class="dt">crit=</span><span class="dv">6</span>)</a>
+<a class="sourceLine" id="cb189-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb189-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb189-7" data-line-number="7">min_nights_<span class="dv">180</span><span class="op">$</span>cluster &lt;-<span class="st"> </span><span class="kw">as.character</span>(hex_skater_k10<span class="op">$</span>groups)</a>
+<a class="sourceLine" id="cb189-8" data-line-number="8"><span class="kw">tm_shape</span>(min_nights_<span class="dv">180</span>) <span class="op">+</span><span class="st"> </span><span class="kw">tm_polygons</span>(<span class="dt">col =</span> <span class="st">&quot;cluster&quot;</span>) </a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-105-1.png" width="1400" /></p>
+<p>Similarly, adjusting the number of clusters to 10 has also not added much value to the analyses. Perhaps, in the case of the <code>minimum_nights</code> variable, there may not be any significant clusters. In fact, it might be more helpful to just show the distribution of the listings with minimum length of stay below 90 days and above 90 days.</p>
+</div>
+</div>
+<div id="clustering-of-price-variable" class="section level2">
+<h2><span class="header-section-number">6.3</span> Clustering of <code>price</code> variable</h2>
+<div class="sourceCode" id="cb190"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb190-1" data-line-number="1">price &lt;-<span class="st"> </span>listings_hex <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb190-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(hex_id) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb190-3" data-line-number="3"><span class="st">  </span><span class="kw">summarise</span>(<span class="dt">price =</span> <span class="kw">mean</span>(price)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb190-4" data-line-number="4"><span class="st">  </span><span class="kw">left_join</span>(hex_grid, .) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb190-5" data-line-number="5"><span class="st">  </span><span class="kw">filter</span>(price <span class="op">&gt;</span><span class="st"> </span><span class="dv">0</span>)</a></code></pre></div>
+<pre><code>## Joining, by = &quot;hex_id&quot;</code></pre>
+<div class="sourceCode" id="cb192"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb192-1" data-line-number="1"><span class="kw">saveRDS</span>(price, here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/price.rds&quot;</span>))</a>
+<a class="sourceLine" id="cb192-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb192-3" data-line-number="3"><span class="kw">tm_shape</span>(price) <span class="op">+</span><span class="st"> </span><span class="kw">tm_fill</span>(<span class="dt">col =</span> <span class="st">&quot;price&quot;</span>,  <span class="dt">breaks=</span><span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">50</span>, <span class="dv">100</span>, <span class="dv">150</span>, <span class="dv">200</span>, <span class="dv">300</span>, <span class="dv">400</span>, <span class="dv">500</span>, <span class="dv">600</span>, <span class="dv">700</span>,<span class="dv">800</span>,<span class="dv">900</span>,<span class="dv">1000</span>, <span class="dv">1100</span>, <span class="dv">1200</span>, <span class="dv">1300</span>, <span class="dv">1400</span>), <span class="dt">palette =</span> <span class="st">&quot;YlGnBu&quot;</span>) <span class="op">+</span><span class="st"> </span><span class="kw">tm_borders</span>()</a></code></pre></div>
+<pre><code>## Warning: Values have found that are higher than the highest break</code></pre>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-106-1.png" width="1400" /></p>
+<div id="building-the-minimum-spanning-tree-1" class="section level3">
+<h3><span class="header-section-number">6.3.1</span> Building the Minimum Spanning Tree</h3>
+<div class="sourceCode" id="cb194"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb194-1" data-line-number="1">hex_sp_price &lt;-<span class="st"> </span><span class="kw">as</span>(price, <span class="st">&quot;Spatial&quot;</span>)</a>
+<a class="sourceLine" id="cb194-2" data-line-number="2">hex_neighbours_price &lt;-<span class="st"> </span><span class="kw">poly2nb</span>(price)</a>
+<a class="sourceLine" id="cb194-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb194-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb194-5" data-line-number="5"><span class="co"># visually inspect neighbours</span></a>
+<a class="sourceLine" id="cb194-6" data-line-number="6"><span class="kw">plot</span>(hex_neighbours_price, <span class="kw">coordinates</span>(hex_sp_price))</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-107-1.png" width="1400" /></p>
+<div class="sourceCode" id="cb195"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb195-1" data-line-number="1">cluster_data_price &lt;-<span class="st"> </span>price <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb195-2" data-line-number="2"><span class="st">  </span><span class="kw">st_set_geometry</span>(<span class="ot">NULL</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb195-3" data-line-number="3"><span class="st">  </span><span class="kw">select</span>(price)</a></code></pre></div>
+<div class="sourceCode" id="cb196"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb196-1" data-line-number="1">hex_edge_costs_price&lt;-<span class="st"> </span><span class="kw">nbcosts</span>(hex_neighbours_price, cluster_data_price)</a>
+<a class="sourceLine" id="cb196-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb196-3" data-line-number="3">hex_edge_weights_price &lt;-<span class="st"> </span><span class="kw">nb2listw</span>(hex_neighbours_price, hex_edge_costs_price, <span class="dt">style =</span> <span class="st">&quot;B&quot;</span>)</a>
+<a class="sourceLine" id="cb196-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb196-5" data-line-number="5">hex_mst_price &lt;-<span class="st"> </span><span class="kw">mstree</span>(hex_edge_weights_price)</a>
+<a class="sourceLine" id="cb196-6" data-line-number="6"><span class="kw">plot</span>(hex_mst_price, <span class="kw">coordinates</span>(hex_sp_price))</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-109-1.png" width="1400" /></p>
+</div>
+<div id="clustering-with-skater-1" class="section level3">
+<h3><span class="header-section-number">6.3.2</span> Clustering with SKATER</h3>
+<div class="sourceCode" id="cb197"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb197-1" data-line-number="1"><span class="co"># deciding the number of clusters</span></a>
+<a class="sourceLine" id="cb197-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb197-3" data-line-number="3">hex_skater_elbow_price &lt;-<span class="st"> </span><span class="kw">skater</span>(hex_mst_price[, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>],</a>
+<a class="sourceLine" id="cb197-4" data-line-number="4">  cluster_data_price,</a>
+<a class="sourceLine" id="cb197-5" data-line-number="5">  <span class="dt">ncuts =</span> <span class="dv">40</span></a>
+<a class="sourceLine" id="cb197-6" data-line-number="6">)</a>
+<a class="sourceLine" id="cb197-7" data-line-number="7"><span class="kw">tibble</span>(</a>
+<a class="sourceLine" id="cb197-8" data-line-number="8">  <span class="dt">x =</span> <span class="dv">0</span><span class="op">:</span><span class="dv">40</span>,</a>
+<a class="sourceLine" id="cb197-9" data-line-number="9">  <span class="dt">y =</span> hex_skater_elbow_price<span class="op">$</span>ssw</a>
+<a class="sourceLine" id="cb197-10" data-line-number="10">) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb197-11" data-line-number="11"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb197-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">x =</span> x, <span class="dt">y =</span> y)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb197-13" data-line-number="13"><span class="st">  </span><span class="kw">ylim</span>(<span class="dv">0</span>, <span class="kw">max</span>(hex_skater_elbow_price<span class="op">$</span>ssw)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb197-14" data-line-number="14"><span class="st">  </span><span class="kw">geom_vline</span>(<span class="dt">xintercept =</span> <span class="dv">4</span>, <span class="dt">linetype =</span> <span class="st">&quot;dashed&quot;</span>, <span class="dt">col =</span> <span class="st">&quot;blue&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb197-15" data-line-number="15"></a>
+<a class="sourceLine" id="cb197-16" data-line-number="16"><span class="st">  </span><span class="kw">theme_light</span>()</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-110-1.png" width="1400" /></p>
+<p>From the elbow plot it can be gathered that the optimal number of clusters is around 4.</p>
+<div class="sourceCode" id="cb198"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb198-1" data-line-number="1">hex_skater_k4 &lt;-<span class="st"> </span><span class="kw">skater</span>(hex_mst_price[, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>],</a>
+<a class="sourceLine" id="cb198-2" data-line-number="2">  cluster_data_price,</a>
+<a class="sourceLine" id="cb198-3" data-line-number="3">  <span class="dt">ncuts =</span> <span class="dv">3</span>)</a>
+<a class="sourceLine" id="cb198-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb198-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb198-6" data-line-number="6">price<span class="op">$</span>cluster &lt;-<span class="st"> </span><span class="kw">as.character</span>(hex_skater_k4<span class="op">$</span>groups)</a>
+<a class="sourceLine" id="cb198-7" data-line-number="7"><span class="kw">tm_shape</span>(price) <span class="op">+</span><span class="st"> </span><span class="kw">tm_polygons</span>(<span class="dt">col =</span> <span class="st">&quot;cluster&quot;</span>) </a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-111-1.png" width="1400" /></p>
+<p>Without setting the minimum number of hexagons, the plot only picks out the areas with extremely high values. This is because there are a few hexagons that are outliers with high average prices.</p>
+<div class="sourceCode" id="cb199"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb199-1" data-line-number="1">hex_skater_k4 &lt;-<span class="st"> </span><span class="kw">skater</span>(hex_mst_price[, <span class="dv">1</span><span class="op">:</span><span class="dv">2</span>],</a>
+<a class="sourceLine" id="cb199-2" data-line-number="2">  cluster_data_price,</a>
+<a class="sourceLine" id="cb199-3" data-line-number="3">  <span class="dt">ncuts =</span> <span class="dv">3</span>,</a>
+<a class="sourceLine" id="cb199-4" data-line-number="4">  <span class="dt">crit =</span> <span class="dv">25</span>)</a>
+<a class="sourceLine" id="cb199-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb199-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb199-7" data-line-number="7">price<span class="op">$</span>cluster &lt;-<span class="st"> </span><span class="kw">as.character</span>(hex_skater_k4<span class="op">$</span>groups)</a>
+<a class="sourceLine" id="cb199-8" data-line-number="8"><span class="kw">tm_shape</span>(price) <span class="op">+</span><span class="st"> </span><span class="kw">tm_polygons</span>(<span class="dt">col =</span> <span class="st">&quot;cluster&quot;</span>) </a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-112-1.png" width="1400" /></p>
+</div>
+</div>
+<div id="reflection-on-spatial-clustering" class="section level2">
+<h2><span class="header-section-number">6.4</span> Reflection on Spatial Clustering</h2>
+<p>Overall, I found that spatial clustering was not necessary or helpful in analysis the data. Most of the information derived from here could be simply plotting the spatial distribution of listings as was done in Section 4. Clustering was inconclusive overall, especially since I was looking at Airbnb prices, where there were significant outliers, while mean prices across Singapore seem to have little differences in general.</p>
+<p>When I performed the same analysis on the minimum nights, I realised it did not help to answer my research question because I was mostly keen to find out which listings were being rented out for less than 90 days, and which were being rented out for 90 days and above. With this in mind, there was no need to further cluster the listings, and it was more helpful to just look at these two categories of listings and where they were spatially located.</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="principal-component-analysis-pca.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="spatial-autocorrelation.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

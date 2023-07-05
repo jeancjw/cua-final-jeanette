@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>3 Exploratory Data Analysis | Exploring the Airbnb Market in Singapore</title>
+  <meta name="description" content="3 Exploratory Data Analysis | Exploring the Airbnb Market in Singapore" />
+  <meta name="generator" content="bookdown 0.18 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="3 Exploratory Data Analysis | Exploring the Airbnb Market in Singapore" />
+  <meta property="og:type" content="book" />
+  
+  
+  
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3 Exploratory Data Analysis | Exploring the Airbnb Market in Singapore" />
+  
+  
+  
+
+<meta name="author" content="Jeanette Choong" />
+
+
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="introduction.html"/>
+<link rel="next" href="visualising-spatial-distribution-of-listings.html"/>
+<script src="libs/jquery-2.2.3/jquery.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+
+<script src="libs/htmlwidgets-1.5.1/htmlwidgets.js"></script>
+<link href="libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-1.3.1/leaflet.js"></script>
+<link href="libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
+<script src="libs/Proj4Leaflet-1.0.1/proj4-compressed.js"></script>
+<script src="libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
+<link href="libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
+<script src="libs/leaflet-binding-2.0.3/leaflet.js"></script>
+<script src="libs/leaflet-providers-1.9.0/leaflet-providers_1.9.0.js"></script>
+<script src="libs/leaflet-providers-plugin-2.0.3/leaflet-providers-plugin.js"></script>
+<link href="libs/HomeButton-0.0.1/home-button.css" rel="stylesheet" />
+<script src="libs/HomeButton-0.0.1/home-button.js"></script>
+<script src="libs/HomeButton-0.0.1/easy-button-src.min.js"></script>
+<link href="libs/PopupTable-0.0.1/popup.css" rel="stylesheet" />
+
+
+<style type="text/css">
+a.sourceLine { display: inline-block; line-height: 1.25; }
+a.sourceLine { pointer-events: none; color: inherit; text-decoration: inherit; }
+a.sourceLine:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode { white-space: pre; position: relative; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+code.sourceCode { white-space: pre-wrap; }
+a.sourceLine { text-indent: -1em; padding-left: 1em; }
+}
+pre.numberSource a.sourceLine
+  { position: relative; left: -4em; }
+pre.numberSource a.sourceLine::before
+  { content: attr(data-line-number);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; pointer-events: all; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+    color: #aaaaaa;
+  }
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+div.sourceCode
+  {  }
+@media screen {
+a.sourceLine::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+code span.at { color: #7d9029; } /* Attribute */
+code span.bn { color: #40a070; } /* BaseN */
+code span.bu { } /* BuiltIn */
+code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+code span.ch { color: #4070a0; } /* Char */
+code span.cn { color: #880000; } /* Constant */
+code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+code span.dt { color: #902000; } /* DataType */
+code span.dv { color: #40a070; } /* DecVal */
+code span.er { color: #ff0000; font-weight: bold; } /* Error */
+code span.ex { } /* Extension */
+code span.fl { color: #40a070; } /* Float */
+code span.fu { color: #06287e; } /* Function */
+code span.im { } /* Import */
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+code span.op { color: #666666; } /* Operator */
+code span.ot { color: #007020; } /* Other */
+code span.pp { color: #bc7a00; } /* Preprocessor */
+code span.sc { color: #4070a0; } /* SpecialChar */
+code span.ss { color: #bb6688; } /* SpecialString */
+code span.st { color: #4070a0; } /* String */
+code span.va { color: #19177c; } /* Variable */
+code span.vs { color: #4070a0; } /* VerbatimString */
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Exploring Airbnbs in Singapore</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Project Summary</a></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a><ul>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#research-questions-hypotheses"><i class="fa fa-check"></i><b>2.1</b> Research Questions &amp; Hypotheses</a></li>
+<li class="chapter" data-level="2.2" data-path="introduction.html"><a href="introduction.html#research-approach"><i class="fa fa-check"></i><b>2.2</b> Research Approach</a></li>
+<li class="chapter" data-level="2.3" data-path="introduction.html"><a href="introduction.html#other-methods"><i class="fa fa-check"></i><b>2.3</b> Other methods</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html"><i class="fa fa-check"></i><b>3</b> Exploratory Data Analysis</a><ul>
+<li class="chapter" data-level="3.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#setting-up-the-data"><i class="fa fa-check"></i><b>3.1</b> Setting up the data</a></li>
+<li class="chapter" data-level="3.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#popularity-of-airbnbs"><i class="fa fa-check"></i><b>3.2</b> Popularity of Airbnbs</a><ul>
+<li class="chapter" data-level="3.2.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#number-of-listings-over-time"><i class="fa fa-check"></i><b>3.2.1</b> Number of listings over time</a></li>
+<li class="chapter" data-level="3.2.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#number-of-reviews-over-time"><i class="fa fa-check"></i><b>3.2.2</b> Number of Reviews over time</a></li>
+</ul></li>
+<li class="chapter" data-level="3.3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#analysis-of-different-variables"><i class="fa fa-check"></i><b>3.3</b> Analysis of different variables</a><ul>
+<li class="chapter" data-level="3.3.1" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#price"><i class="fa fa-check"></i><b>3.3.1</b> <code>price</code></a></li>
+<li class="chapter" data-level="3.3.2" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#host_listings_count"><i class="fa fa-check"></i><b>3.3.2</b> <code>host_listings_count</code></a></li>
+<li class="chapter" data-level="3.3.3" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#property_type"><i class="fa fa-check"></i><b>3.3.3</b> <code>property_type</code></a></li>
+<li class="chapter" data-level="3.3.4" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#room_type"><i class="fa fa-check"></i><b>3.3.4</b> <code>room_type</code></a></li>
+<li class="chapter" data-level="3.3.5" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#reviews_per_month"><i class="fa fa-check"></i><b>3.3.5</b> <code>reviews_per_month</code></a></li>
+<li class="chapter" data-level="3.3.6" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#minimum_nights"><i class="fa fa-check"></i><b>3.3.6</b> <code>minimum_nights</code></a></li>
+<li class="chapter" data-level="3.3.7" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#planning_region"><i class="fa fa-check"></i><b>3.3.7</b> <code>planning_region</code></a></li>
+<li class="chapter" data-level="3.3.8" data-path="exploratory-data-analysis.html"><a href="exploratory-data-analysis.html#planning_area"><i class="fa fa-check"></i><b>3.3.8</b> <code>planning_area</code></a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html"><i class="fa fa-check"></i><b>4</b> Visualising spatial distribution of Listings</a><ul>
+<li class="chapter" data-level="4.1" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-planning-region"><i class="fa fa-check"></i><b>4.1</b> By planning region</a></li>
+<li class="chapter" data-level="4.2" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-property-type"><i class="fa fa-check"></i><b>4.2</b> By property type</a></li>
+<li class="chapter" data-level="4.3" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-minimum-length-of-stay"><i class="fa fa-check"></i><b>4.3</b> By minimum length of stay</a></li>
+<li class="chapter" data-level="4.4" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#by-proximity-to-mrt-stations"><i class="fa fa-check"></i><b>4.4</b> By proximity to MRT stations</a><ul>
+<li class="chapter" data-level="4.4.1" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#load-mrt-data"><i class="fa fa-check"></i><b>4.4.1</b> Load MRT data</a></li>
+<li class="chapter" data-level="4.4.2" data-path="visualising-spatial-distribution-of-listings.html"><a href="visualising-spatial-distribution-of-listings.html#assessing-prices-of-listings-based-on-proximity-to-mrt"><i class="fa fa-check"></i><b>4.4.2</b> Assessing prices of listings based on proximity to MRT</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html"><i class="fa fa-check"></i><b>5</b> Principal Component Analysis (PCA)</a><ul>
+<li class="chapter" data-level="5.1" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html#extract-components-scale-data"><i class="fa fa-check"></i><b>5.1</b> Extract components &amp; scale data</a></li>
+<li class="chapter" data-level="5.2" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html#pca-using-varimax"><i class="fa fa-check"></i><b>5.2</b> PCA using varimax</a></li>
+<li class="chapter" data-level="5.3" data-path="principal-component-analysis-pca.html"><a href="principal-component-analysis-pca.html#reflections-on-pca"><i class="fa fa-check"></i><b>5.3</b> Reflections on PCA</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="spatial-clustering.html"><a href="spatial-clustering.html"><i class="fa fa-check"></i><b>6</b> Spatial Clustering</a><ul>
+<li class="chapter" data-level="6.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#aggregation-to-larger-spatial-units"><i class="fa fa-check"></i><b>6.1</b> Aggregation to larger spatial units</a></li>
+<li class="chapter" data-level="6.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-of-minimum_nights-variable"><i class="fa fa-check"></i><b>6.2</b> Clustering of <code>minimum_nights</code> variable</a><ul>
+<li class="chapter" data-level="6.2.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#building-the-minimum-spanning-tree"><i class="fa fa-check"></i><b>6.2.1</b> Building the Minimum Spanning Tree</a></li>
+<li class="chapter" data-level="6.2.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-with-skater"><i class="fa fa-check"></i><b>6.2.2</b> Clustering with SKATER</a></li>
+</ul></li>
+<li class="chapter" data-level="6.3" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-of-price-variable"><i class="fa fa-check"></i><b>6.3</b> Clustering of <code>price</code> variable</a><ul>
+<li class="chapter" data-level="6.3.1" data-path="spatial-clustering.html"><a href="spatial-clustering.html#building-the-minimum-spanning-tree-1"><i class="fa fa-check"></i><b>6.3.1</b> Building the Minimum Spanning Tree</a></li>
+<li class="chapter" data-level="6.3.2" data-path="spatial-clustering.html"><a href="spatial-clustering.html#clustering-with-skater-1"><i class="fa fa-check"></i><b>6.3.2</b> Clustering with SKATER</a></li>
+</ul></li>
+<li class="chapter" data-level="6.4" data-path="spatial-clustering.html"><a href="spatial-clustering.html#reflection-on-spatial-clustering"><i class="fa fa-check"></i><b>6.4</b> Reflection on Spatial Clustering</a></li>
+</ul></li>
+<li class="chapter" data-level="7" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html"><i class="fa fa-check"></i><b>7</b> Spatial Autocorrelation</a><ul>
+<li class="chapter" data-level="7.1" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html#morans-i"><i class="fa fa-check"></i><b>7.1</b> Moran’s I</a></li>
+<li class="chapter" data-level="7.2" data-path="spatial-autocorrelation.html"><a href="spatial-autocorrelation.html#local-value-of-autocorrelation"><i class="fa fa-check"></i><b>7.2</b> Local value of autocorrelation</a></li>
+</ul></li>
+<li class="chapter" data-level="8" data-path="spatial-regression.html"><a href="spatial-regression.html"><i class="fa fa-check"></i><b>8</b> Spatial Regression</a><ul>
+<li class="chapter" data-level="8.1" data-path="spatial-regression.html"><a href="spatial-regression.html#setting-up-the-regression"><i class="fa fa-check"></i><b>8.1</b> Setting up the regression</a></li>
+<li class="chapter" data-level="8.2" data-path="spatial-regression.html"><a href="spatial-regression.html#reflection-on-spatial-autocorrelationregression-method"><i class="fa fa-check"></i><b>8.2</b> Reflection on Spatial Autocorrelation/Regression Method</a></li>
+</ul></li>
+<li class="chapter" data-level="9" data-path="concluding-thoughts.html"><a href="concluding-thoughts.html"><i class="fa fa-check"></i><b>9</b> Concluding thoughts</a></li>
+<li class="chapter" data-level="10" data-path="references.html"><a href="references.html"><i class="fa fa-check"></i><b>10</b> References</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/rstudio/bookdown" target="blank">Published with bookdown</a></li>
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Exploring the Airbnb Market in Singapore</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="exploratory-data-analysis" class="section level1">
+<h1><span class="header-section-number">3</span> Exploratory Data Analysis</h1>
+<div id="setting-up-the-data" class="section level2">
+<h2><span class="header-section-number">3.1</span> Setting up the data</h2>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb8-1" data-line-number="1">knitr<span class="op">::</span>opts_chunk<span class="op">$</span><span class="kw">set</span>(<span class="dt">dpi =</span> <span class="dv">200</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb9-1" data-line-number="1"><span class="kw">library</span>(tidyverse)</a>
+<a class="sourceLine" id="cb9-2" data-line-number="2"><span class="kw">library</span>(here)</a>
+<a class="sourceLine" id="cb9-3" data-line-number="3"><span class="kw">library</span>(sf)</a>
+<a class="sourceLine" id="cb9-4" data-line-number="4"><span class="kw">library</span>(skimr)</a>
+<a class="sourceLine" id="cb9-5" data-line-number="5"><span class="kw">library</span>(lubridate)</a>
+<a class="sourceLine" id="cb9-6" data-line-number="6"><span class="kw">library</span>(forcats)</a>
+<a class="sourceLine" id="cb9-7" data-line-number="7"><span class="kw">library</span>(tmap)</a>
+<a class="sourceLine" id="cb9-8" data-line-number="8"><span class="kw">library</span>(psych)</a>
+<a class="sourceLine" id="cb9-9" data-line-number="9"><span class="kw">library</span>(RColorBrewer)</a></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb10-1" data-line-number="1">listings &lt;-<span class="st"> </span><span class="kw">read_csv</span>(here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/listings-mar20.csv&quot;</span>))</a></code></pre></div>
+<pre><code>## Parsed with column specification:
+## cols(
+##   .default = col_double(),
+##   listing_url = col_character(),
+##   name = col_character(),
+##   summary = col_character(),
+##   space = col_character(),
+##   description = col_character(),
+##   experiences_offered = col_character(),
+##   neighborhood_overview = col_character(),
+##   notes = col_character(),
+##   transit = col_character(),
+##   access = col_character(),
+##   interaction = col_character(),
+##   house_rules = col_character(),
+##   thumbnail_url = col_logical(),
+##   medium_url = col_logical(),
+##   picture_url = col_character(),
+##   xl_picture_url = col_logical(),
+##   host_url = col_character(),
+##   host_name = col_character(),
+##   host_location = col_character(),
+##   host_about = col_character()
+##   # ... with 36 more columns
+## )</code></pre>
+<pre><code>## See spec(...) for full column specifications.</code></pre>
+<pre><code>## Warning: 5 parsing failures.
+##  row     col           expected     actual                                                                                                                file
+## 3389 license 1/0/T/F/TRUE/FALSE 201117828H &#39;/Users/jeancjw/Documents/SUTD/MUSPP/02.522 Urban Data &amp; Methods II CUA/cua-jeanette-c/projdata/listings-mar20.csv&#39;
+## 4641 license 1/0/T/F/TRUE/FALSE 201537598E &#39;/Users/jeancjw/Documents/SUTD/MUSPP/02.522 Urban Data &amp; Methods II CUA/cua-jeanette-c/projdata/listings-mar20.csv&#39;
+## 5156 license 1/0/T/F/TRUE/FALSE 201202564R &#39;/Users/jeancjw/Documents/SUTD/MUSPP/02.522 Urban Data &amp; Methods II CUA/cua-jeanette-c/projdata/listings-mar20.csv&#39;
+## 6227 license 1/0/T/F/TRUE/FALSE 201537598E &#39;/Users/jeancjw/Documents/SUTD/MUSPP/02.522 Urban Data &amp; Methods II CUA/cua-jeanette-c/projdata/listings-mar20.csv&#39;
+## 6234 license 1/0/T/F/TRUE/FALSE 201537598E &#39;/Users/jeancjw/Documents/SUTD/MUSPP/02.522 Urban Data &amp; Methods II CUA/cua-jeanette-c/projdata/listings-mar20.csv&#39;</code></pre>
+<div class="sourceCode" id="cb14"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb14-1" data-line-number="1">listings &lt;-<span class="st"> </span>listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb14-2" data-line-number="2"><span class="st">  </span><span class="kw">select</span>(id, name, listing_url, description, host_id, host_name, host_since, host_response_time, host_response_rate, host_acceptance_rate, host_is_superhost, host_listings_count, property_type, room_type, price, minimum_nights, neighbourhood_cleansed, neighbourhood_group_cleansed, latitude, longitude, number_of_reviews, number_of_reviews_ltm, review_scores_rating, reviews_per_month)</a>
+<a class="sourceLine" id="cb14-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb14-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb14-5" data-line-number="5">listings &lt;-<span class="st"> </span><span class="kw">rename</span>(listings, <span class="dt">planning_area =</span> neighbourhood_cleansed, <span class="dt">planning_region =</span> neighbourhood_group_cleansed)</a>
+<a class="sourceLine" id="cb14-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb14-7" data-line-number="7"><span class="kw">saveRDS</span>(listings, here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/listings.rds&quot;</span>))</a></code></pre></div>
+</div>
+<div id="popularity-of-airbnbs" class="section level2">
+<h2><span class="header-section-number">3.2</span> Popularity of Airbnbs</h2>
+<div id="number-of-listings-over-time" class="section level3">
+<h3><span class="header-section-number">3.2.1</span> Number of listings over time</h3>
+<p>Data for Airbnb listings in Singapore is only available as far back as March 2019. Based on monthly listings data, we can see that the number of listings remained relatively stable, with minor seasonal “peaks” in the months of May, June and December, which are usually holiday season.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb15-1" data-line-number="1"><span class="co"># values based on number of observations from previous months&#39; listings</span></a>
+<a class="sourceLine" id="cb15-2" data-line-number="2">listings_time &lt;-<span class="st"> </span><span class="kw">tribble</span>(</a>
+<a class="sourceLine" id="cb15-3" data-line-number="3">  <span class="op">~</span>month, <span class="op">~</span>total_listings,</a>
+<a class="sourceLine" id="cb15-4" data-line-number="4">  <span class="st">&quot;mar20&quot;</span>, <span class="dv">7713</span>,</a>
+<a class="sourceLine" id="cb15-5" data-line-number="5">  <span class="st">&quot;feb20&quot;</span>, <span class="dv">8047</span>,</a>
+<a class="sourceLine" id="cb15-6" data-line-number="6">  <span class="st">&quot;jan20&quot;</span>, <span class="dv">7857</span>,</a>
+<a class="sourceLine" id="cb15-7" data-line-number="7">  <span class="st">&quot;dec19&quot;</span>, <span class="dv">8000</span>,</a>
+<a class="sourceLine" id="cb15-8" data-line-number="8">  <span class="st">&quot;nov19&quot;</span>, <span class="dv">7857</span>,</a>
+<a class="sourceLine" id="cb15-9" data-line-number="9">  <span class="st">&quot;oct19&quot;</span>, <span class="dv">7794</span>,</a>
+<a class="sourceLine" id="cb15-10" data-line-number="10">  <span class="st">&quot;sep19&quot;</span>, <span class="dv">7675</span>,</a>
+<a class="sourceLine" id="cb15-11" data-line-number="11">  <span class="st">&quot;aug19&quot;</span>, <span class="dv">7907</span>,</a>
+<a class="sourceLine" id="cb15-12" data-line-number="12">  <span class="st">&quot;jul19&quot;</span>, <span class="dv">8033</span>,</a>
+<a class="sourceLine" id="cb15-13" data-line-number="13">  <span class="st">&quot;jun19&quot;</span>, <span class="dv">8293</span>,</a>
+<a class="sourceLine" id="cb15-14" data-line-number="14">  <span class="st">&quot;may19&quot;</span>, <span class="dv">8325</span>,</a>
+<a class="sourceLine" id="cb15-15" data-line-number="15">  <span class="st">&quot;apr19&quot;</span>, <span class="dv">8090</span>,</a>
+<a class="sourceLine" id="cb15-16" data-line-number="16">  <span class="st">&quot;mar19&quot;</span>, <span class="dv">7975</span></a>
+<a class="sourceLine" id="cb15-17" data-line-number="17">)</a>
+<a class="sourceLine" id="cb15-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb15-19" data-line-number="19">month_order &lt;-<span class="st"> </span><span class="kw">rev</span>(listings_time<span class="op">$</span>month)</a>
+<a class="sourceLine" id="cb15-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb15-21" data-line-number="21">listings_time <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb15-22" data-line-number="22"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">month =</span> <span class="kw">ordered</span>(month, <span class="dt">levels =</span> month_order)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb15-23" data-line-number="23"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> month, <span class="dt">y =</span> total_listings)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb15-24" data-line-number="24"><span class="st">  </span><span class="kw">geom_col</span>(<span class="dt">color =</span> <span class="st">&quot;grey&quot;</span>, <span class="dt">fill =</span> <span class="st">&quot;paleturquoise3&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb15-25" data-line-number="25"><span class="st">  </span><span class="kw">geom_text</span>(<span class="kw">aes</span>(<span class="dt">label =</span> total_listings), <span class="dt">vjust =</span> <span class="fl">-0.5</span>, <span class="dt">size =</span> <span class="dv">3</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb15-26" data-line-number="26"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">&quot;Total listings&quot;</span>)</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-10-1.png" width="1400" /></p>
+<p>Due to the lack of data, it is not possible to look at how the number of listings evolved since the implementation of the laws in 2017, based on the listings data. Instead, the reviews data can be used as a proxy for how popular the Airbnb platform has been over the years.</p>
+</div>
+<div id="number-of-reviews-over-time" class="section level3">
+<h3><span class="header-section-number">3.2.2</span> Number of Reviews over time</h3>
+<div class="sourceCode" id="cb16"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb16-1" data-line-number="1">reviews &lt;-<span class="st"> </span><span class="kw">read_csv</span>(here<span class="op">::</span><span class="kw">here</span>(<span class="st">&quot;projdata/reviews-mar20.csv&quot;</span>))</a></code></pre></div>
+<pre><code>## Parsed with column specification:
+## cols(
+##   listing_id = col_double(),
+##   id = col_double(),
+##   date = col_date(format = &quot;&quot;),
+##   reviewer_id = col_double(),
+##   reviewer_name = col_character(),
+##   comments = col_character()
+## )</code></pre>
+<p>Plotting the number of reviews for each date since May 2011 till March 2020 makes the data quite difficult to read although we can see a general upward trend.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb18-1" data-line-number="1">reviews <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb18-2" data-line-number="2"><span class="st">  </span><span class="kw">geom_bar</span>(<span class="kw">aes</span>(date)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb18-3" data-line-number="3"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">&quot;number of reviews&quot;</span>)</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-12-1.png" width="1400" /></p>
+<p>To make things neater, we can look at the aggregated number of reviews in each year.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb19-1" data-line-number="1">reviews_year &lt;-<span class="st"> </span>reviews <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb19-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">year =</span> <span class="kw">case_when</span>(</a>
+<a class="sourceLine" id="cb19-3" data-line-number="3">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2011&quot;</span>) <span class="op">~</span><span class="st"> &quot;2011&quot;</span>,</a>
+<a class="sourceLine" id="cb19-4" data-line-number="4">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2012&quot;</span>) <span class="op">~</span><span class="st"> &quot;2012&quot;</span>,</a>
+<a class="sourceLine" id="cb19-5" data-line-number="5">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2013&quot;</span>) <span class="op">~</span><span class="st"> &quot;2013&quot;</span>,</a>
+<a class="sourceLine" id="cb19-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb19-7" data-line-number="7">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2014&quot;</span>) <span class="op">~</span><span class="st"> &quot;2014&quot;</span>,</a>
+<a class="sourceLine" id="cb19-8" data-line-number="8">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2015&quot;</span>) <span class="op">~</span><span class="st"> &quot;2015&quot;</span>,</a>
+<a class="sourceLine" id="cb19-9" data-line-number="9">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2016&quot;</span>) <span class="op">~</span><span class="st"> &quot;2016&quot;</span>,</a>
+<a class="sourceLine" id="cb19-10" data-line-number="10">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2017&quot;</span>) <span class="op">~</span><span class="st"> &quot;2017&quot;</span>,</a>
+<a class="sourceLine" id="cb19-11" data-line-number="11">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2018&quot;</span>) <span class="op">~</span><span class="st"> &quot;2018&quot;</span>,</a>
+<a class="sourceLine" id="cb19-12" data-line-number="12">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2019&quot;</span>) <span class="op">~</span><span class="st"> &quot;2019&quot;</span>,</a>
+<a class="sourceLine" id="cb19-13" data-line-number="13">    <span class="dt">date =</span> <span class="kw">str_detect</span>(date, <span class="st">&quot;2020&quot;</span>) <span class="op">~</span><span class="st"> &quot;2020&quot;</span></a>
+<a class="sourceLine" id="cb19-14" data-line-number="14">  )) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb19-15" data-line-number="15"><span class="st">  </span><span class="kw">group_by</span>(year) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb19-16" data-line-number="16"><span class="st">  </span><span class="kw">count</span>()</a>
+<a class="sourceLine" id="cb19-17" data-line-number="17"></a>
+<a class="sourceLine" id="cb19-18" data-line-number="18">reviews_year</a></code></pre></div>
+<pre><code>## # A tibble: 10 x 2
+## # Groups:   year [10]
+##    year      n
+##    &lt;chr&gt; &lt;int&gt;
+##  1 2011     23
+##  2 2012    169
+##  3 2013    388
+##  4 2014   1201
+##  5 2015   4742
+##  6 2016  10206
+##  7 2017  17851
+##  8 2018  25000
+##  9 2019  38717
+## 10 2020   8119</code></pre>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb21-1" data-line-number="1">reviews_year <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb21-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(year <span class="op">!=</span><span class="st"> &quot;2011&quot;</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb21-3" data-line-number="3"><span class="st">  </span><span class="kw">filter</span>(year <span class="op">!=</span><span class="st"> &quot;2020&quot;</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># exclude 2020 as it&#39;s only a few months into the year, and exclude 2011 as data only beganfrom mid-year</span></a>
+<a class="sourceLine" id="cb21-4" data-line-number="4"><span class="st">  </span><span class="kw">ggplot</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb21-5" data-line-number="5"><span class="st">  </span><span class="kw">geom_line</span>(<span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y =</span> n, <span class="dt">group =</span> <span class="ot">NA</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb21-6" data-line-number="6"><span class="st">  </span><span class="kw">geom_point</span>(<span class="kw">aes</span>(<span class="dt">x =</span> year, <span class="dt">y =</span> n)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb21-7" data-line-number="7"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_text</span>(<span class="dt">angle =</span> <span class="dv">90</span>, <span class="dt">vjust =</span> <span class="dv">0</span>)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb21-8" data-line-number="8"><span class="st">  </span><span class="kw">ggtitle</span>(<span class="st">&quot;Number of reviews over the years&quot;</span>) <span class="op">+</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb21-9" data-line-number="9"><span class="st">  </span><span class="kw">labs</span>(<span class="dt">y =</span> <span class="st">&quot;no. of reviews&quot;</span>) </a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-14-1.png" width="1400" /></p>
+<p>As can be seen in the plot above, there is a year-on-year increase in the number of reviews, which can mean (1) the number of listings has increased over the years, (2) the number of tenants per listing has increased over the years, or both. In any case, this may be an indication that the law is being flouted.</p>
+</div>
+</div>
+<div id="analysis-of-different-variables" class="section level2">
+<h2><span class="header-section-number">3.3</span> Analysis of different variables</h2>
+<div class="sourceCode" id="cb22"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb22-1" data-line-number="1">listings <span class="op">%&gt;%</span><span class="st"> </span><span class="kw">head</span>()</a></code></pre></div>
+<pre><code>## # A tibble: 6 x 24
+##      id name  listing_url description host_id host_name host_since
+##   &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;         &lt;dbl&gt; &lt;chr&gt;          &lt;dbl&gt;
+## 1 49091 COZI… https://ww… This is Ro…  266763 Francesca      40471
+## 2 50646 Plea… https://ww… Fully furn…  227796 Sujatha        40429
+## 3 56334 COZI… https://ww… This is Ro…  266763 Francesca      40471
+## 4 71609 Ensu… https://ww… For 3 (Web…  367042 Belinda        40572
+## 5 71896 B&amp;B … https://ww… Vocational…  367042 Belinda        40572
+## 6 71903 Room… https://ww… Like your …  367042 Belinda        40572
+## # … with 17 more variables: host_response_time &lt;chr&gt;, host_response_rate &lt;chr&gt;,
+## #   host_acceptance_rate &lt;chr&gt;, host_is_superhost &lt;lgl&gt;,
+## #   host_listings_count &lt;dbl&gt;, property_type &lt;chr&gt;, room_type &lt;chr&gt;,
+## #   price &lt;dbl&gt;, minimum_nights &lt;dbl&gt;, planning_area &lt;chr&gt;,
+## #   planning_region &lt;chr&gt;, latitude &lt;dbl&gt;, longitude &lt;dbl&gt;,
+## #   number_of_reviews &lt;dbl&gt;, number_of_reviews_ltm &lt;dbl&gt;,
+## #   review_scores_rating &lt;dbl&gt;, reviews_per_month &lt;dbl&gt;</code></pre>
+<div class="sourceCode" id="cb24"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb24-1" data-line-number="1">listings &lt;-<span class="st"> </span>listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb24-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(</a>
+<a class="sourceLine" id="cb24-3" data-line-number="3">    <span class="dt">host_name =</span> <span class="kw">as_factor</span>(host_name),</a>
+<a class="sourceLine" id="cb24-4" data-line-number="4">    <span class="dt">property_type =</span> <span class="kw">as_factor</span>(property_type),</a>
+<a class="sourceLine" id="cb24-5" data-line-number="5">    <span class="dt">planning_area =</span> <span class="kw">as_factor</span>(planning_area),</a>
+<a class="sourceLine" id="cb24-6" data-line-number="6">    <span class="dt">planning_region =</span> <span class="kw">as_factor</span>(planning_region),</a>
+<a class="sourceLine" id="cb24-7" data-line-number="7">    <span class="dt">room_type =</span> <span class="kw">as_factor</span>(room_type),</a>
+<a class="sourceLine" id="cb24-8" data-line-number="8">    <span class="dt">price =</span> <span class="kw">as.numeric</span>(<span class="kw">gsub</span>(<span class="st">&quot;[</span><span class="ch">\\</span><span class="st">$]&quot;</span>, <span class="st">&quot;&quot;</span>, price))</a>
+<a class="sourceLine" id="cb24-9" data-line-number="9">  )</a>
+<a class="sourceLine" id="cb24-10" data-line-number="10"></a>
+<a class="sourceLine" id="cb24-11" data-line-number="11">listings</a></code></pre></div>
+<pre><code>## # A tibble: 7,713 x 24
+##        id name  listing_url description host_id host_name host_since
+##     &lt;dbl&gt; &lt;chr&gt; &lt;chr&gt;       &lt;chr&gt;         &lt;dbl&gt; &lt;fct&gt;          &lt;dbl&gt;
+##  1  49091 &quot;COZ… https://ww… &quot;This is R…  266763 Francesca      40471
+##  2  50646 &quot;Ple… https://ww… &quot;Fully fur…  227796 Sujatha        40429
+##  3  56334 &quot;COZ… https://ww… &quot;This is R…  266763 Francesca      40471
+##  4  71609 &quot;Ens… https://ww… &quot;For 3 (We…  367042 Belinda        40572
+##  5  71896 &quot;B&amp;B… https://ww… &quot;Vocationa…  367042 Belinda        40572
+##  6  71903 &quot;Roo… https://ww… &quot;Like your…  367042 Belinda        40572
+##  7  71907 &quot;3rd… https://ww… &quot;Vocationa…  367042 Belinda        40572
+##  8 117957 &quot;Pri… https://ww… &quot;Private R…  448620 Lynnity        40619
+##  9 241503 &quot;Lon… https://ww… &quot;Stay in a… 1017645 Bianca         40780
+## 10 241508 &quot;Lon… https://ww… &quot;Stay in a… 1017645 Bianca         40780
+## # … with 7,703 more rows, and 17 more variables: host_response_time &lt;chr&gt;,
+## #   host_response_rate &lt;chr&gt;, host_acceptance_rate &lt;chr&gt;,
+## #   host_is_superhost &lt;lgl&gt;, host_listings_count &lt;dbl&gt;, property_type &lt;fct&gt;,
+## #   room_type &lt;fct&gt;, price &lt;dbl&gt;, minimum_nights &lt;dbl&gt;, planning_area &lt;fct&gt;,
+## #   planning_region &lt;fct&gt;, latitude &lt;dbl&gt;, longitude &lt;dbl&gt;,
+## #   number_of_reviews &lt;dbl&gt;, number_of_reviews_ltm &lt;dbl&gt;,
+## #   review_scores_rating &lt;dbl&gt;, reviews_per_month &lt;dbl&gt;</code></pre>
+<div id="price" class="section level3">
+<h3><span class="header-section-number">3.3.1</span> <code>price</code></h3>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb26-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>price)</a></code></pre></div>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    14.0    65.0   125.0   169.4   199.0  9999.0</code></pre>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb28-1" data-line-number="1"><span class="kw">describe</span>(listings<span class="op">$</span>price)</a></code></pre></div>
+<pre><code>##    vars    n   mean     sd median trimmed  mad min  max range  skew kurtosis
+## X1    1 7713 169.39 337.42    125  132.35 93.4  14 9999  9985 18.53   442.61
+##      se
+## X1 3.84</code></pre>
+<p>A quick glance at the descriptive statistics on the <code>price</code> variable shows us that the median is lower than the mean, and the skew is positive. This is unsurprising considering that the Airbnb hosts can generally choose how they want to price their listings. Furthermore, the dataset includes listings that are either entire home/apartments, private rooms, or hotel rooms, and within these types, are different types of houses such as bungalows, apartments, condominiums, which would affect the prices too. Since in the context of the law, where HDB flats are only allowed to be rented out for a period of six consecutive months, or 180 days, to non-tourists, while private homes have to fulfill a minimum rental length of three consecutive months or 90 days, it is safe to expect more of these listings to be private homes as it is easier to rent them out. This could explain the right skew.</p>
+<p>Visually, this is how it looks:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb30-1" data-line-number="1">listings <span class="op">%&gt;%</span><span class="st"> </span></a>
+<a class="sourceLine" id="cb30-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(price <span class="op">&lt;</span><span class="st"> </span><span class="dv">1000</span>) <span class="op">%&gt;%</span><span class="st"> </span><span class="co"># remove outliers</span></a>
+<a class="sourceLine" id="cb30-3" data-line-number="3"><span class="kw">ggplot</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb30-4" data-line-number="4"><span class="st">  </span><span class="kw">geom_histogram</span>(<span class="kw">aes</span>(<span class="dt">x =</span> price), <span class="dt">binwidth =</span> <span class="dv">10</span>)</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-19-1.png" width="1400" /></p>
+</div>
+<div id="host_listings_count" class="section level3">
+<h3><span class="header-section-number">3.3.2</span> <code>host_listings_count</code></h3>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb31-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>host_listings_count)</a></code></pre></div>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s 
+##    0.00    1.00    9.00   50.69   51.00  403.00      17</code></pre>
+<div class="sourceCode" id="cb33"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb33-1" data-line-number="1"><span class="kw">describe</span>(listings<span class="op">$</span>host_listings_count)</a></code></pre></div>
+<pre><code>##    vars    n  mean    sd median trimmed   mad min max range skew kurtosis   se
+## X1    1 7696 50.69 91.66      9   28.48 11.86   0 403   403 2.68     7.11 1.04</code></pre>
+<p>The summary shows that the lowest number of listings is 0, which is strange because all of them have at least one listing, and some have multiple listings. Perhaps the data failed to capture some of this. To check the data, we can use the <code>host_id</code> identifier to count the number of listings they have.</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb35-1" data-line-number="1">host_listings_count &lt;-<span class="st"> </span>listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb35-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(host_id) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb35-3" data-line-number="3"><span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb35-4" data-line-number="4"><span class="st">  </span><span class="kw">arrange</span>(<span class="op">-</span>n)</a>
+<a class="sourceLine" id="cb35-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb35-6" data-line-number="6">listings &lt;-<span class="st"> </span>listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb35-7" data-line-number="7"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>host_listings_count)</a>
+<a class="sourceLine" id="cb35-8" data-line-number="8"></a>
+<a class="sourceLine" id="cb35-9" data-line-number="9">host_listings_count &lt;-<span class="st"> </span>host_listings_count <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb35-10" data-line-number="10"><span class="st">  </span><span class="kw">left_join</span>(listings, <span class="dt">by =</span> <span class="st">&quot;host_id&quot;</span>)</a>
+<a class="sourceLine" id="cb35-11" data-line-number="11"></a>
+<a class="sourceLine" id="cb35-12" data-line-number="12">listings &lt;-<span class="st"> </span>host_listings_count <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb35-13" data-line-number="13"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">host_listings_count =</span> <span class="kw">as.numeric</span>(n)) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb35-14" data-line-number="14"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>n)</a></code></pre></div>
+<p>After cleaning up the data, we can look at the descriptive statistics again:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb36-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>host_listings_count)</a></code></pre></div>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1.00    2.00   10.00   45.64   52.00  342.00</code></pre>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb38-1" data-line-number="1"><span class="kw">describe</span>(listings<span class="op">$</span>host_listings_count)</a></code></pre></div>
+<pre><code>##    vars    n  mean    sd median trimmed   mad min max range skew kurtosis   se
+## X1    1 7713 45.64 76.72     10    27.9 13.34   1 342   341 2.64     7.13 0.87</code></pre>
+<p>Now the lowest number of listings per host makes more sense. The maximum number of listings for a single host is 342, which is still a very high value, and may hint that Airbnb Singapore allows full-fledged rental businesses to operate using their platform.</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb40-1" data-line-number="1">listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb40-2" data-line-number="2"><span class="st">  </span><span class="kw">arrange</span>(<span class="op">-</span>host_listings_count) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb40-3" data-line-number="3"><span class="st">  </span><span class="kw">head</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb40-4" data-line-number="4"><span class="st">  </span><span class="kw">select</span>(host_name, host_listings_count)</a></code></pre></div>
+<pre><code>## Adding missing grouping variables: `host_id`</code></pre>
+<pre><code>## # A tibble: 6 x 3
+## # Groups:   host_id [1]
+##    host_id host_name host_listings_count
+##      &lt;dbl&gt; &lt;fct&gt;                   &lt;dbl&gt;
+## 1 66406177 Jay                       342
+## 2 66406177 Jay                       342
+## 3 66406177 Jay                       342
+## 4 66406177 Jay                       342
+## 5 66406177 Jay                       342
+## 6 66406177 Jay                       342</code></pre>
+<p>For example, the host Jay has the most listings, a total of 342, and the mean number of listings is about 50, which is indicative of the fact that most Airbnb hosts in Singapore are not individual homeowners, whom Airbnb set out for the platform to be targeted at.</p>
+</div>
+<div id="property_type" class="section level3">
+<h3><span class="header-section-number">3.3.3</span> <code>property_type</code></h3>
+<div class="sourceCode" id="cb43"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb43-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>property_type)</a></code></pre></div>
+<pre><code>##              Apartment                  Villa                  House 
+##                   3104                     15                    536 
+##              Townhouse                  Other            Condominium 
+##                    121                     57                   2174 
+##            Guest suite      Bed and breakfast     Serviced apartment 
+##                     18                     70                    741 
+##                 Hostel                   Loft               Bungalow 
+##                    332                    122                     57 
+##                 Chalet                  Hotel                   Boat 
+##                      3                    158                      7 
+##                  Cabin             Guesthouse         Boutique hotel 
+##                      1                     21                    158 
+##                   Tent             Aparthotel               Campsite 
+##                      6                      4                      3 
+##                    Bus Heritage hotel (India)            Earth house 
+##                      1                      1                      1 
+##             Tiny house 
+##                      2</code></pre>
+<p>After looking through the dataset, I realised some of the property types can be combined based on the description and url of the listing.</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb45-1" data-line-number="1">listings &lt;-<span class="st"> </span>listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb45-2" data-line-number="2"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">property_type =</span> <span class="kw">recode</span>(property_type, <span class="st">&quot;Heritage hotel (India)&quot;</span> =<span class="st"> &quot;Hotel&quot;</span>, <span class="st">&quot;Boutique hotel&quot;</span> =<span class="st"> &quot;Hotel&quot;</span>, <span class="st">&quot;Bus&quot;</span> =<span class="st"> &quot;Apartment&quot;</span>, <span class="st">&quot;Cabin&quot;</span> =<span class="st"> &quot;Hotel&quot;</span>, <span class="st">&quot;Earth house&quot;</span> =<span class="st"> &quot;Apartment&quot;</span>, <span class="st">&quot;Tiny house&quot;</span> =<span class="st"> &quot;Hotel&quot;</span>, <span class="st">&quot;Aparthotel&quot;</span> =<span class="st"> &quot;Hotel&quot;</span>, <span class="st">&quot;Heritage hotel (India)&quot;</span> =<span class="st"> &quot;Hotel&quot;</span>, <span class="st">&quot;Aparthotel&quot;</span> =<span class="st"> &quot;Hotel&quot;</span>, <span class="st">&quot;Bed and breakfast&quot;</span> =<span class="st"> &quot;Hostel/Dorm&quot;</span>, <span class="st">&quot;Hostel&quot;</span> =<span class="st"> &quot;Hostel/Dorm&quot;</span>, <span class="st">&quot;Villa&quot;</span> =<span class="st"> &quot;House&quot;</span>, <span class="st">&quot;Bungalow&quot;</span> =<span class="st"> &quot;House&quot;</span>, <span class="st">&quot;House&quot;</span> =<span class="st"> &quot;House&quot;</span>))</a></code></pre></div>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb46-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>property_type)</a></code></pre></div>
+<pre><code>##          Apartment              House          Townhouse              Other 
+##               3106                608                121                 57 
+##        Condominium        Guest suite        Hostel/Dorm Serviced apartment 
+##               2174                 18                402                741 
+##               Loft             Chalet              Hotel               Boat 
+##                122                  3                324                  7 
+##         Guesthouse               Tent           Campsite 
+##                 21                  6                  3</code></pre>
+<p>Here we see the types of housing being rented out over Airbnb. Interestingly, a number of hotels have taken to the Airbnb platform to promote their listings, which means that while Airbnbs have been reported to have negative effects on the hotel industry, it could potentially also benefit the boutique hotels.</p>
+</div>
+<div id="room_type" class="section level3">
+<h3><span class="header-section-number">3.3.4</span> <code>room_type</code></h3>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb48-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>room_type)</a></code></pre></div>
+<pre><code>##    Private room Entire home/apt     Shared room      Hotel room 
+##            3206            3728             272             507</code></pre>
+<p>The room type is clearer on which listings are indeed individual homes, and which ones are hotel rooms. From the previous <code>property_type</code> summary, this was not as clear because of some overlaps in description of the listings. For example, under ‘Others’, there were a mix of different property types ranging from HDB flats to capsule hotels, to private homes and higher-end luxurious hotels.</p>
+</div>
+<div id="reviews_per_month" class="section level3">
+<h3><span class="header-section-number">3.3.5</span> <code>reviews_per_month</code></h3>
+<div class="sourceCode" id="cb50"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb50-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>reviews_per_month)</a></code></pre></div>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA&#39;s 
+##  0.0100  0.1500  0.4300  0.9379  1.1400 29.1700    2812</code></pre>
+<div class="sourceCode" id="cb52"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb52-1" data-line-number="1"><span class="kw">describe</span>(listings<span class="op">$</span>reviews_per_month)</a></code></pre></div>
+<pre><code>##    vars    n mean   sd median trimmed mad  min   max range skew kurtosis   se
+## X1    1 4901 0.94 1.41   0.43    0.66 0.5 0.01 29.17 29.16 5.69     70.8 0.02</code></pre>
+<p>While we cannot ensure that every guest leaves a review, it can be used as a proxy to how many listings are flouting the law.</p>
+<p>For example, in a given private home listing, one would expect that the number of reviews for that listing per month should be a maximum of 1 review every 3 months (i.e. approximately 0.33 reviews per month). For a HDB listing, this number would be 0.17 reviews per month.</p>
+<p>However, as we can see from the summary of the descriptive statistics, the mean number of reviews per month for each listing is about 0.94, which is way higher than the expected number based on the law.</p>
+<p>As the law on short-term accommodations was only implemented on 6 Feb 2017 (Wong, 2017), it would only be fair to consider the number of reviews after the law was implemented.</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb54-1" data-line-number="1">reviews_after_law_<span class="dv">2017</span> &lt;-<span class="st"> </span>reviews <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb54-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(date <span class="op">&gt;</span><span class="st"> &quot;2017-02-06&quot;</span> <span class="op">&amp;</span><span class="st"> </span>date <span class="op">&lt;</span><span class="st"> &quot;2018-01-01&quot;</span>)</a>
+<a class="sourceLine" id="cb54-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb54-4" data-line-number="4">reviews_after_law_<span class="dv">2017</span></a></code></pre></div>
+<pre><code>## # A tibble: 16,277 x 6
+##    listing_id      id date       reviewer_id reviewer_name comments             
+##         &lt;dbl&gt;   &lt;dbl&gt; &lt;date&gt;           &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;                
+##  1      71896  1.82e8 2017-08-13   122046660 Rainier Paolo &quot;The place was reall…
+##  2      71903  1.36e8 2017-03-06   118189111 Lee           &quot;Good for stay if yo…
+##  3      71903  1.87e8 2017-08-27    70378982 Steve         &quot;it was a quite nice…
+##  4      71903  1.92e8 2017-09-08    92184943 Patrick       &quot;Thank you very much…
+##  5     241503  1.31e8 2017-02-07    75544959 Lili          &quot;位于住宅区,交通便利,5分钟步行到地铁…
+##  6     241503  1.32e8 2017-02-12    52156259 Jane          &quot;The house is very g…
+##  7     241503  1.32e8 2017-02-15    63292326 张瑜慧        &quot;很棒的一次体验,交通方便,房间卫生很干…
+##  8     241503  1.33e8 2017-02-20    95569642 丽年          &quot;房东是个很优雅礼貌的美女,and al…
+##  9     241503  1.34e8 2017-02-25    99030984 Tanya         &quot;Never disappointed …
+## 10     241503  1.35e8 2017-03-01    85029570 Yoshitaka     &quot;comfortable stay in…
+## # … with 16,267 more rows</code></pre>
+<div class="sourceCode" id="cb56"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb56-1" data-line-number="1">reviews_after_law_<span class="dv">2018</span>_<span class="dv">2019</span> &lt;-<span class="st"> </span>reviews <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb56-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(date <span class="op">&gt;</span><span class="st"> &quot;2017-12-31&quot;</span> <span class="op">&amp;</span><span class="st"> </span>date <span class="op">&lt;</span><span class="st"> &quot;2020-01-01&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb57"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb57-1" data-line-number="1">reviews_after_law_<span class="dv">2020</span> &lt;-<span class="st"> </span>reviews <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb57-2" data-line-number="2"><span class="st">  </span><span class="kw">filter</span>(date <span class="op">&gt;</span><span class="st"> &quot;2019-12-31&quot;</span>)</a></code></pre></div>
+<div class="sourceCode" id="cb58"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb58-1" data-line-number="1">reviews_after_law_<span class="dv">2017</span> &lt;-<span class="st"> </span>reviews_after_law_<span class="dv">2017</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb58-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(listing_id) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb58-3" data-line-number="3"><span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb58-4" data-line-number="4"><span class="st">  </span><span class="kw">left_join</span>(reviews_after_law_<span class="dv">2017</span>, <span class="dt">by =</span> <span class="st">&quot;listing_id&quot;</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb58-5" data-line-number="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">reviews_per_month =</span> n <span class="op">/</span><span class="st"> </span><span class="dv">11</span>) <span class="co"># only 11 months considered</span></a></code></pre></div>
+<div class="sourceCode" id="cb59"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb59-1" data-line-number="1">reviews_after_law_<span class="dv">2018</span>_<span class="dv">2019</span> &lt;-<span class="st"> </span>reviews_after_law_<span class="dv">2018</span>_<span class="dv">2019</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb59-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(listing_id) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb59-3" data-line-number="3"><span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb59-4" data-line-number="4"><span class="st">  </span><span class="kw">left_join</span>(reviews_after_law_<span class="dv">2018</span>_<span class="dv">2019</span>, <span class="dt">by =</span> <span class="st">&quot;listing_id&quot;</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb59-5" data-line-number="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">reviews_per_month =</span> n <span class="op">/</span><span class="st"> </span><span class="dv">12</span>) <span class="co"># full year considered</span></a></code></pre></div>
+<div class="sourceCode" id="cb60"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb60-1" data-line-number="1">reviews_after_law_<span class="dv">2020</span> &lt;-<span class="st"> </span>reviews_after_law_<span class="dv">2020</span> <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb60-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(listing_id) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb60-3" data-line-number="3"><span class="st">  </span><span class="kw">count</span>() <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb60-4" data-line-number="4"><span class="st">  </span><span class="kw">left_join</span>(reviews_after_law_<span class="dv">2020</span>, <span class="dt">by =</span> <span class="st">&quot;listing_id&quot;</span>) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb60-5" data-line-number="5"><span class="st">  </span><span class="kw">mutate</span>(<span class="dt">reviews_per_month =</span> n <span class="op">/</span><span class="st"> </span><span class="dv">3</span>) <span class="co"># only 3 months considered</span></a></code></pre></div>
+<div class="sourceCode" id="cb61"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb61-1" data-line-number="1">reviews_after_law &lt;-<span class="st"> </span><span class="kw">rbind</span>(reviews_after_law_<span class="dv">2017</span>, reviews_after_law_<span class="dv">2018</span>_<span class="dv">2019</span>, reviews_after_law_<span class="dv">2020</span>)</a>
+<a class="sourceLine" id="cb61-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb61-3" data-line-number="3">reviews_after_law &lt;-<span class="st"> </span>reviews_after_law <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb61-4" data-line-number="4"><span class="st">  </span><span class="kw">select</span>(<span class="op">-</span>n)</a>
+<a class="sourceLine" id="cb61-5" data-line-number="5"></a>
+<a class="sourceLine" id="cb61-6" data-line-number="6">reviews_after_law</a></code></pre></div>
+<pre><code>## # A tibble: 88,113 x 7
+## # Groups:   listing_id [4,605]
+##    listing_id     id date       reviewer_id reviewer_name comments
+##         &lt;dbl&gt;  &lt;dbl&gt; &lt;date&gt;           &lt;dbl&gt; &lt;chr&gt;         &lt;chr&gt;   
+##  1      71896 1.82e8 2017-08-13   122046660 Rainier Paolo &quot;The pl…
+##  2      71903 1.36e8 2017-03-06   118189111 Lee           &quot;Good f…
+##  3      71903 1.87e8 2017-08-27    70378982 Steve         &quot;it was…
+##  4      71903 1.92e8 2017-09-08    92184943 Patrick       &quot;Thank …
+##  5     241503 1.31e8 2017-02-07    75544959 Lili          &quot;位于住宅区,…
+##  6     241503 1.32e8 2017-02-12    52156259 Jane          &quot;The ho…
+##  7     241503 1.32e8 2017-02-15    63292326 张瑜慧        &quot;很棒的一次体…
+##  8     241503 1.33e8 2017-02-20    95569642 丽年          &quot;房东是个很优…
+##  9     241503 1.34e8 2017-02-25    99030984 Tanya         &quot;Never …
+## 10     241503 1.35e8 2017-03-01    85029570 Yoshitaka     &quot;comfor…
+## # … with 88,103 more rows, and 1 more variable: reviews_per_month &lt;dbl&gt;</code></pre>
+<div class="sourceCode" id="cb63"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb63-1" data-line-number="1"><span class="kw">summary</span>(reviews_after_law<span class="op">$</span>reviews_per_month)</a></code></pre></div>
+<pre><code>##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+##  0.08333  1.45454  3.16667  3.91205  5.63636 18.33333</code></pre>
+<p>Surprisingly, the number of reviews per month for each listing was actually much more than when it was averaged out across the time period that the dataset contained (May 2011- Mar 2020). This not ony suggests the obvious that several listings are flouting the rules, but also shows that the policy may not have had much of an impact on how Airbnb hosts in Singapore rented out their flats. In fact, considering that there have only five individuals who have been fined under this law, it probably suggests that there has been little enforcement, or that the government is facing challenges in policing these illegal rentals.</p>
+</div>
+<div id="minimum_nights" class="section level3">
+<h3><span class="header-section-number">3.3.6</span> <code>minimum_nights</code></h3>
+<p>Another variable of interest when it comes to whether listings might be flouting the law is the minimum night of stay.</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb65-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>minimum_nights)</a></code></pre></div>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##    1.00    2.00    3.00   19.09   14.00 1000.00</code></pre>
+<div class="sourceCode" id="cb67"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb67-1" data-line-number="1"><span class="kw">describe</span>(listings<span class="op">$</span>minimum_nights)</a></code></pre></div>
+<pre><code>##    vars    n  mean    sd median trimmed  mad min  max range skew kurtosis   se
+## X1    1 7713 19.09 45.57      3    8.43 2.97   1 1000   999 7.43   105.99 0.52</code></pre>
+<p>For minimum nights, we are mostly interested in listings that allow their guests to stay below 90 nights as these listing are likely the ones who are flouting the rules. Seeing that the mean number of nights of stay stands at 19.09 days, it shows that there are several illegal rentals going on.</p>
+</div>
+<div id="planning_region" class="section level3">
+<h3><span class="header-section-number">3.3.7</span> <code>planning_region</code></h3>
+<div class="sourceCode" id="cb69"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb69-1" data-line-number="1"><span class="kw">summary</span>(listings<span class="op">$</span>planning_region)</a></code></pre></div>
+<pre><code>##      North Region    Central Region       East Region North-East Region 
+##               200              6252               447               310 
+##       West Region 
+##               504</code></pre>
+<div class="sourceCode" id="cb71"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb71-1" data-line-number="1"><span class="kw">ggplot</span>(listings, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">fct_infreq</span>(planning_region), <span class="dt">fill =</span> room_type)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb71-2" data-line-number="2"><span class="st">  </span><span class="kw">geom_bar</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb71-3" data-line-number="3"><span class="st">  </span><span class="kw">labs</span>(</a>
+<a class="sourceLine" id="cb71-4" data-line-number="4">    <span class="dt">title =</span> <span class="st">&quot;No. of listings by region&quot;</span>,</a>
+<a class="sourceLine" id="cb71-5" data-line-number="5">    <span class="dt">x =</span> <span class="st">&quot;Pln Region&quot;</span>, <span class="dt">y =</span> <span class="st">&quot;No. of listings by region and room type&quot;</span></a>
+<a class="sourceLine" id="cb71-6" data-line-number="6">  ) <span class="op">+</span></a>
+<a class="sourceLine" id="cb71-7" data-line-number="7"><span class="st">  </span><span class="kw">theme_light</span>()</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-43-1.png" width="1400" /></p>
+<p>If most listings are in the Central Region, it is quite possible that these listings target short-term stays, just as how many hotels are located centrally.</p>
+<div class="sourceCode" id="cb72"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb72-1" data-line-number="1"><span class="kw">ggplot</span>(listings, <span class="kw">aes</span>(<span class="dt">x =</span> <span class="kw">fct_infreq</span>(planning_region), <span class="dt">fill =</span> property_type)) <span class="op">+</span></a>
+<a class="sourceLine" id="cb72-2" data-line-number="2"><span class="st">  </span><span class="kw">geom_bar</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb72-3" data-line-number="3"><span class="st">  </span><span class="kw">labs</span>(</a>
+<a class="sourceLine" id="cb72-4" data-line-number="4">    <span class="dt">title =</span> <span class="st">&quot;No. of listings by region&quot;</span>,</a>
+<a class="sourceLine" id="cb72-5" data-line-number="5">    <span class="dt">x =</span> <span class="st">&quot;Pln Region&quot;</span>, <span class="dt">y =</span> <span class="st">&quot;No. of listings and property type&quot;</span></a>
+<a class="sourceLine" id="cb72-6" data-line-number="6">  ) <span class="op">+</span></a>
+<a class="sourceLine" id="cb72-7" data-line-number="7"><span class="st">  </span><span class="kw">theme_light</span>()</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-44-1.png" width="1400" /></p>
+</div>
+<div id="planning_area" class="section level3">
+<h3><span class="header-section-number">3.3.8</span> <code>planning_area</code></h3>
+<div class="sourceCode" id="cb73"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb73-1" data-line-number="1">listings <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb73-2" data-line-number="2"><span class="st">  </span><span class="kw">group_by</span>(planning_area) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb73-3" data-line-number="3"><span class="st">  </span><span class="kw">summarize</span>(</a>
+<a class="sourceLine" id="cb73-4" data-line-number="4">    <span class="dt">num_listings =</span> <span class="kw">n</span>(),</a>
+<a class="sourceLine" id="cb73-5" data-line-number="5">    <span class="dt">region =</span> <span class="kw">unique</span>(planning_region)</a>
+<a class="sourceLine" id="cb73-6" data-line-number="6">  ) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb73-7" data-line-number="7"><span class="st">  </span><span class="kw">top_n</span>(<span class="dt">n =</span> <span class="dv">10</span>, <span class="dt">wt =</span> num_listings) <span class="op">%&gt;%</span></a>
+<a class="sourceLine" id="cb73-8" data-line-number="8"><span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(</a>
+<a class="sourceLine" id="cb73-9" data-line-number="9">    <span class="dt">x =</span> <span class="kw">fct_reorder</span>(planning_area, num_listings),</a>
+<a class="sourceLine" id="cb73-10" data-line-number="10">    <span class="dt">y =</span> num_listings, <span class="dt">fill =</span> region</a>
+<a class="sourceLine" id="cb73-11" data-line-number="11">  )) <span class="op">+</span></a>
+<a class="sourceLine" id="cb73-12" data-line-number="12"><span class="st">  </span><span class="kw">geom_col</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb73-13" data-line-number="13"><span class="st">  </span><span class="kw">coord_flip</span>() <span class="op">+</span></a>
+<a class="sourceLine" id="cb73-14" data-line-number="14"><span class="st">  </span><span class="kw">theme</span>(<span class="dt">legend.position =</span> <span class="st">&quot;bottom&quot;</span>) <span class="op">+</span></a>
+<a class="sourceLine" id="cb73-15" data-line-number="15"><span class="st">  </span><span class="kw">labs</span>(</a>
+<a class="sourceLine" id="cb73-16" data-line-number="16">    <span class="dt">title =</span> <span class="st">&quot;Top 10 neighbourhoods by no. of listings&quot;</span>,</a>
+<a class="sourceLine" id="cb73-17" data-line-number="17">    <span class="dt">x =</span> <span class="st">&quot;Neighbourhood&quot;</span>, <span class="dt">y =</span> <span class="st">&quot;No. of listings&quot;</span></a>
+<a class="sourceLine" id="cb73-18" data-line-number="18">  )</a></code></pre></div>
+<p><img src="cua-final-proj-jeanette_files/figure-html/unnamed-chunk-45-1.png" width="1400" /></p>
+<p>The above plot shows the top 10 neighbourhoods based on the number of listings. As expected, most of these neighbourhoods are from the central region, but it is interesting to note that Kallang and Geylang are the top two neighbourhoods as they are not exactly considered tourist hotspots.</p>
+</div>
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="introduction.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="visualising-spatial-distribution-of-listings.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/lunr.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+</body>
+
+</html>

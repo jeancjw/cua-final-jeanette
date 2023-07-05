@@ -1,0 +1,262 @@
+---
+title: "Session 9 - Spatial clustering"
+author: "Jeanette Choong"
+date: "4/2/2020"
+output: github_document
+---
+
+```{r}
+library(tidyverse)
+library(here)
+library(tmap)
+library(sf)
+```
+
+```{r}
+resale <- readRDS(here::here("data/resale_with_geom.rds"))
+
+set.seed(13)
+resale %>% 
+  sample_n(5000) %>% #plotting large datasets can take a long time, use a sample to speed things up.
+  tm_shape() + tm_dots(col = "town")
+```
+
+```{r}
+set.seed(13) #
+resale_sample <- sample_n(resale, 5000)
+```
+
+In density-based clustering(DBSCAN), you used the DBSCAN algorithm on two factors extracted with factor analysis. Instead, we can use the explicity x/y location of each flat to look for clustering pattern in space. As HDB estates are not a 'natural'phenomenon but are instead planned by the Singapore government, we certainly would expect them to be clustered in space. We first look for an elbow in our k-nearest-neighbour distance plot (```st``` functions are part of the ```sf```package)
+
+```{r}
+library(dbscan)
+coordinates_resale <- resale_sample %>% 
+  st_coordinates() 
+
+kNNdistplot(coordinates_resale, k=30)+
+abline(h=800, col = "red", lty=2)
+```
+
+Once we have chosen an appropriate epsilon, we plot our samples over the map.
+
+```{r}
+resale_sample$geographical_cluster <- dbscan(coordinates_resale, eps=800, minPts = 30) %>% 
+  pluck('cluster') %>% 
+  as.character()
+
+resale_sample %>% 
+  sample_n(500) %>% 
+  tm_shape() + tm_text(text="geographical_cluster", col="town")
+
+```
+As you can see, if we set the epsilon or distance threshold to 800 meters we find about 10 clusters (0 is the ‘cluster’ with outliers). It is here that we start to see very explicitely that clustering is scale dependendent. This notion is very important when dealing with spatial data: what is ‘clustered’ at one scale level might not be clustered on another. We will get back to this conceptual notion a few times in the coming weeks.
+
+### 9.1.1 Exercise
+
+Try decreasing the epsilon to 600 or even 400 meters, and back up to 1000 meters. What do you see happening? Can you explain what you see? Can you interpret it as another bias-variance trade-off?
+
+So flats with the same attributes belong to the same cluster? the answer should be yes because they are clustered according to geographical distance. 
+
+```{r}
+resale_sample$geographical_cluster <- dbscan(coordinates_resale, eps=600, minPts = 30) %>% 
+  pluck('cluster') %>% 
+  as.character()
+
+resale_sample %>% 
+  sample_n(500) %>% 
+  tm_shape() + tm_text(text="geographical_cluster", col="town")
+
+```
+
+
+```{r}
+resale_sample$geographical_cluster <- dbscan(coordinates_resale, eps=400, minPts = 30) %>% 
+  pluck('cluster') %>% 
+  as.character()
+
+resale_sample %>% 
+  sample_n(500) %>% 
+  tm_shape() + tm_text(text="geographical_cluster", col="town")
+```
+
+```{r}
+resale_sample$geographical_cluster <- dbscan(coordinates_resale, eps=1000, minPts = 30) %>% 
+  pluck('cluster') %>% 
+  as.character()
+
+resale_sample %>% 
+  sample_n(500) %>% 
+  tm_shape() + tm_text(text="geographical_cluster", col="town")
+```
+### With DBSCAN
+```{r}
+resale_attributes <- resale_sample %>% 
+  select(floor_area_sqm, remaining_lease, resale_price) %>% 
+  st_set_geometry(NULL) %>% #remove geometry column
+  scale()
+
+kNNdistplot(resale_attributes, k = 30)
+```
+
+```{r}
+library(factoextra)
+dbscan(resale_attributes, eps = 0.6, minPts = 30) %>% 
+  fviz_cluster(data = resale_attributes)
+```
+
+Can you interpret these results? Can you distinguish clusters? As is often the case with variables related to socio-economic processes, DBSCAN might not be the most useful algorithm. We can compare with a partitioning approach instead.
+
+What you should get out of this is that it's not a very good clustering method. There are only two groups.
+
+* First, look for the elbow to choose our number of clusters.
+
+```{r}
+fviz_nbclust(resale_attributes, kmeans, method = "wss")
+```
+
+We pick 4 clusters and plot the result (note that we cluster over three variables, yet fviz_cluster plots in a 2D space: it is using the first two principal components to do so).
+
+### With k-means
+```{r}
+kmeans(resale_attributes, centers = 4, nstart = 50) %>% 
+  fviz_cluster(data = resale_attributes)
+```
+
+Finally, we plot on the geography of Singapore the cluster that our observations belong to.
+
+Cluster based on attritbutes: 
+```{r}
+resale_sample$attributes_cluster <- kmeans(resale_attributes, centers = 4, nstart = 50) %>% 
+  pluck('cluster') %>% as.character()
+
+resale_sample %>% 
+  sample_n(500) %>% 
+  tm_shape() + tm_text(text = "attributes_cluster", col= "attributes_cluster") + tm_facets(by="attributes_cluster")
+```
+
+The results of the k-means algorithm might be a little more interpretable and they clearly show some specific geographic variation as well despite the fact that geographic space hasn’t been considered explicitly in the decisions of the algorithm. However, if we were to draw logical, coherent spatial units (for example, to form the basis of administrative units) this wouldn’t necessarily be possible yet. For this process - often referred to as regionalization - it can be useful to combine both spatial and non-spatial characteristics of the area. To do this, in the next sections we will first aggregate our individual flats to larger spatial units (often referred to as ‘basic units’) before performing a spatially-constrained clustering.
+
+## 9.2 Aggregation
+
+To aggregate to slightly larger spatial units, we will create a grid of small hexagons over Singapore. As our flat sales do not cover the entire country, we will read the planning areas again.
+
+```{r}
+planning_areas <- st_read(here::here("data/MP14_PLNG_AREA_NO_SEA_PL.shp")) %>% filter(!(OBJECTID==49 | OBJECTID==18)) #remove islands
+```
+
+
+```{r}
+hex_grid <- planning_areas %>% 
+  st_make_grid(st_bbox(.), square = FALSE, cellsize = 1500) %>%  #setting the sq to false means hex, and each hex is 1500m in size
+  st_sf() %>% 
+  mutate(hex_id=row_number())
+
+tm_shape(hex_grid) + tm_polygons()
+```
+
+once we have our hexagon spatial units ready, we can spatially join each flat sales to its corresponding grid cell. If you set the seed before creating ```resale_sample``` above, you should fin dthat the first observation of ```resale_sample``` is:
+
+```{r}
+resale_sample %>% head(1)
+```
+
+```{r}
+resale_hex <- st_join(resale_sample, hex_grid) %>% 
+  st_set_geometry(NULL)
+```
+
+Note: we set the geometry to ```NULL``` here so that the ```POINT``` geometry of the flats does not interfere with out analysis later - we don't need it any longer after the join.
+
+We can now use the resulting dataset to create a series of metrics that reflect the situation in each hexagon. For example, to calculate the average years of lease remaining in each hexagon.
+
+Finding for each hex, what is the mean remaining lease:
+```{r}
+remaining_lease <- resale_hex %>% 
+  group_by(hex_id) %>% 
+  summarise(remaining_lease=mean(remaining_lease)) %>% 
+  left_join(hex_grid, .) %>% # add back the geometry so you can plot it
+  filter(remaining_lease >0)
+
+tm_shape(remaining_lease) + tm_polygons(col="remaining_lease")
+```
+
+## 9.3 Spatially-constrained clustering
+
+For the spatially constrained clustering, we will use the SKATER algorithm. Although it is a bit less efficient than the REDCAP algorithms discussed in the reading for this Chapter, it has a solid implementation in the spdep package for R. The algorithm has a number of key ingredients (most of these are shared with other regionalization/clustering algorithms)
+
+We convert our sf object to an sp object first. sp is the pre-cursor to sf and not all methods in spdep are able to handle sf objects appropriately. We then start with constructing a list of neighbors.
+
+```{r}
+library(spdep)
+```
+
+```{r}
+hex_sp <- as(remaining_lease, 'Spatial')
+hex_neighbours <- poly2nb(hex_sp)
+## visually inspect neighbors
+plot(hex_neighbours, coordinates(hex_sp))
+```
+
+### 9.3.1 From areal representation to network
+
+As you can see the Nothern part of Singapore is disconnected from the other areas. This is simply caused by a lack of HDB resale transactions in the in-between area. However, for the algorithm this is somewhat problematic as it expects all areas in the dataset to be connected to each other. We solve this manually by connecting it to the rest of our hexagons. 
+
+To do so, we will need to run an interactive session.
+
+Note that you may need to open the R console client.
+
+(adds extra edge to the object)
+
+### 9.3.2 Building the minimum spanning tree
+
+Load the ```hex_neighbors``` and plot
+
+```{r}
+hex_neighbours <- readRDS(here::here("data/hex_neighbors_connect.rds"))
+plot(hex_neighbours, coordinates(hex_sp))
+```
+We also need the attribute data to base our clustering on. For now, we use the ```remaining_lease``` variable.
+
+```{r}
+cluster_data <- remaining_lease %>% 
+  st_set_geometry(NULL) %>% 
+  select(remaining_lease)
+```
+
+Once all the core ingredients are in place we can calculate a few other required variables. Make sure to look into each of the new variables you get to check whether you understand the steps here.
+
+```{r}
+# For each edge between neighbours we calculate the (dis)similarity or cost in the data space
+hex_edge_costs <- nbcosts(hex_neighbours, cluster_data)
+# we add the calculated costs to neighbor list
+hex_edge_weights <- nb2listw(hex_neighbours, hex_edge_costs, style="B")
+# based on the weighted neighbor list we calculate a minimum spanning tree
+hex_mstree <- mstree(hex_edge_weights)
+plot(hex_mstree, coordinates(hex_sp))
+```
+
+### 9.3.3 Clustering with SKATER
+
+It is this minimum spanning tree that is the essential ingredient in the SKATER algorithm. We only need the first two columns of the tree (defining the "from" and "to" of each edge in the tree), the cluster data and the number of cuts (the number of clusteres will be equal to the number of cuts plus 1)
+
+```{r}
+hex_skater_k6 <- skater(hex_mstree[,1:2],
+                        cluster_data, 
+                        ncuts = 5)
+
+remaining_lease$cluster <- as.character(hex_skater_k6$groups)
+tm_shape(remaining_lease) + tm_polygons(col="cluster")
+```
+
+The SKATER algorithm has a number of useful additional constraints. For example, we can set the minimum size of the cluster to be 10 hexagons, like so:
+
+```{r}
+hex_skater_k6_crit <- skater(hex_mstree[,1:2],
+                             cluster_data, 
+                             ncuts = 5, 
+                             crit = 10)
+
+remaining_lease$cluster <- as.character(hex_skater_k6_crit$groups)
+tm_shape(remaining_lease) + tm_polygons(col="cluster")
+```
+

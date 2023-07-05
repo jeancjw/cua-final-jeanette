@@ -1,0 +1,46 @@
+--- 
+title: "Exploring the Airbnb Market in Singapore"
+author: "Jeanette Choong"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+---
+
+# Project Summary
+
+Airbnbs as potential short-term accommodations are practically illegal in Singapore.
+
+Under the 2017 Planning Act, private home owners are permitted to rent our their homes for a minimum of three consecutive months. For HDB flats, home owners may only rent out their homes to non-tourists for a minimum of six consecutive months, under the Housing and Development Act. 
+
+Why are there still so many Airbnb listings in Singapore despite these legal restrictions? 
+
+```{r message=FALSE}
+knitr::opts_chunk$set(dpi = 200)
+```
+
+```{r message = FALSE}
+library(tidyverse)
+library(here)
+library(sf)
+library(tmap)
+```
+
+```{r}
+listings <- readRDS(here::here("projdata/listings.rds"))
+```
+
+
+```{r}
+listings_sf <- st_as_sf(listings, coords = c("longitude", "latitude"), crs = 4326) %>%
+  st_transform(3414)
+# convert coordinates to SVY21
+```
+
+```{r}
+tmap_mode("view")
+tm_shape(listings_sf) +
+  tm_symbols(col="blue", shape = 21, size = 0.1, border.col = "grey21", border.lwd=0.5)
+```
+
